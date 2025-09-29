@@ -10,19 +10,19 @@ import FirebaseCore
 
 @main
 struct DojoApp: App {
-    @StateObject var authViewModel = AuthViewModel()
+    @ObservedObject var authManager: AuthManager
     
     init() {
         FirebaseApp.configure()
+        
+        authManager = AuthManager.shared
     }
     var body: some Scene {
         WindowGroup {
-            if authViewModel.isLoggedIn {
+            if authManager.isLoggedIn {
                 ContentView()
-                    .environmentObject(authViewModel)
             } else {
                 AuthView()
-                    .environmentObject(authViewModel)
             }
         }
     }

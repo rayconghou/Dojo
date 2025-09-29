@@ -3,7 +3,6 @@ import SwiftUI
 // MARK: - Sidebar with Extra Options
 
 struct SidebarView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
     @Binding var showSidebar: Bool
     @Binding var showDegenMode: Bool
     @Binding var selectedTab: Int
@@ -170,7 +169,7 @@ struct SidebarView: View {
                 
                 // Logout
                 Button(action: {
-                    authViewModel.signOut()
+                    AuthManager.shared.signOut()
                 }) {
                     HStack {
                         Image(systemName: "power")

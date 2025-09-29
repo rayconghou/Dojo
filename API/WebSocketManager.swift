@@ -1,15 +1,18 @@
 //
 //  WebSocketManager.swift
-//  Dojo
+//  FortuneCollective
 //
 //  Created by Hugh on 9/20/25.
 //
 
 
 import Foundation
+import FirebaseAuth
 
 enum WebSocketError: Error {
     case badResponse
+    case badIdToken
+    case forgotUID
 }
 
 class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
@@ -20,13 +23,26 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
     
     private var firebase_uid: String? = nil
     
-    func connect(url: URL) {
-        urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: OperationQueue())
-        var request = URLRequest(url: url)
-//        request.setValue("x-api-key", forHTTPHeaderField: "FoqLmICk99wIrFxV0wB13sWzoKMe4ot2dSTWMhp6")
-        webSocketTask = urlSession?.webSocketTask(with: request)
-        webSocketTask?.resume()
-        print("Attempting to connect to WebSocket...")
+    func connect(url: URL, user: User) {
+        firebase_uid = user.uid
+        
+        user.getIDTokenForcingRefresh(true) { idToken, error in
+            if let error = error {
+                print("Error: \(error)")
+                return
+            }
+            
+            if let unwrappedIdToken = idToken {
+                self.urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: OperationQueue())
+                var request = URLRequest(url: url)
+                request.setValue(unwrappedIdToken, forHTTPHeaderField: "authorizationToken")
+                self.webSocketTask = self.urlSession?.webSocketTask(with: request)
+                self.webSocketTask?.resume()
+                print("Attempting to connect to WebSocket...")
+            } else {
+                print("Error: \(WebSocketError.badIdToken)")
+            }
+        }
     }
 
     func send(message: String) {
@@ -52,6 +68,7 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
                     Task {
                         let decoder = JSONDecoder()
                         guard let jsonData = text.data(using: .utf8) else {
+                            print("Error:", WebSocketError.badResponse)
                             throw WebSocketError.badResponse
                         }
                         
@@ -73,12 +90,8 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
                         }
                         
                         do {
-                            // Try to decode as user profile first
                             let userProfileProperties = try decoder.decode(userProperties.self, from: jsonData)
-                            DispatchQueue.main.async {
-                                AuthManager.shared.userProfile = UserProfileViewModel(email: userProfileProperties.email, username: userProfileProperties.username)
-                                print("User profile loaded: \(userProfileProperties.email)")
-                            }
+                            AuthManager.shared.userProfile = UserProfileViewModel(email: userProfileProperties.email, username: userProfileProperties.username)
                         } catch {
                             // If that fails, try to decode as error response
                             do {
@@ -88,6 +101,7 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
                                 print("Error decoding JSON: \(error.localizedDescription)")
                                 print("Raw message: \(text)")
                             }
+                            AuthManager.shared.signOut()
                         }
                     }
                     
@@ -108,7 +122,12 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
         
         isConnected = true
         
-        getUserProfileIfConnectedAndLoggedIn(firebase_uid: nil)
+//        If we have a userProfile, send it to DB. Else, get the profile from the DB
+        if let uP = AuthManager.shared.userProfile {
+            addUserProfileToDB(email: uP.email, username: uP.username)
+        } else {
+            getUserProfile()
+        }
     }
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
@@ -118,20 +137,35 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
         isConnected = false
     }
     
-    func getUserProfileIfConnectedAndLoggedIn(firebase_uid: String?) {
-        var uid: String? = nil
-        if firebase_uid != nil {
-            uid = firebase_uid
-            
-            self.firebase_uid = firebase_uid
-        } else if self.firebase_uid != nil {
-            uid = self.firebase_uid
+    func getUserProfile() {
+        if let unwrapped_firebase_uid = firebase_uid {
+            send(message: "{\"action\": \"getUserProfile\", \"firebase_uid\": \"" + unwrapped_firebase_uid + "\"}")
+        } else {
+            print("Error: \(WebSocketError.forgotUID)")
         }
-        
-        if let unwrapped_uid = uid {
-            if isConnected && unwrapped_uid != nil {                
-                send(message: "{\"action\": \"getUserProfile\", \"firebase_uid\": \"" + unwrapped_uid + "\"}")
-            }
+    }
+    
+    func addUserProfileToDB(email: String, username: String) {
+        if let unwrapped_firebase_uid = firebase_uid {
+            ContentView.webSocketManager.send(message: "{\"action\": \"addUserProfile\", \"firebase_uid\":\"\(unwrapped_firebase_uid)\",\"username\":\"\(username)\",\"email\":\"\(email)\"}")
+        } else {
+            print("Error: \(WebSocketError.forgotUID)")
         }
+
+//        do {
+//                let config = try await SQSClient.SQSClientConfiguration(region: AuthManager.aws_region)
+//                let sqsClient = SQSClient(config: config)
+//                _ = try await sqsClient.sendMessage(
+//                    input: SendMessageInput(
+//                        messageBody: "{\"firebase_uid\":\"\(firebase_uid)\",\"username\":\"\(username)\",\"email\":\"\(email)\"}",
+//                        queueUrl: "https://sqs.\(AuthManager.aws_region).amazonaws.com/497197924608/LambdaRDSQueue"
+//                    )
+//                )
+//            
+//            completion(.success(()))
+//        } catch {
+//            print("Error: \(error)")
+//            completion(.failure(error))
+//        }
     }
 }

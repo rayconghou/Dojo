@@ -2,7 +2,6 @@ import Foundation
 import SwiftUI
 
 struct AuthView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var email = ""
     @State private var username = ""
     @State private var password = ""

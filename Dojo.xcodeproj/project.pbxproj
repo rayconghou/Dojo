@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0647C0532E87711B0007DB2A /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647C0522E87711B0007DB2A /* WebSocketManager.swift */; };
 		C300AE652E84CF0900C63E96 /* AWSSQS in Frameworks */ = {isa = PBXBuildFile; productRef = C300AE642E84CF0900C63E96 /* AWSSQS */; };
 		C319FA172D8113080058C4B2 /* Asset.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA132D8113070058C4B2 /* Asset.swift */; };
 		C319FA182D8113080058C4B2 /* CoinGecko.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA142D8113070058C4B2 /* CoinGecko.swift */; };
@@ -39,7 +40,6 @@
 		C319FA602D930C1E0058C4B2 /* DegenSplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA5F2D930C1E0058C4B2 /* DegenSplashScreenView.swift */; };
 		C319FA632D99B7F50058C4B2 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA622D99B7F50058C4B2 /* AuthManager.swift */; };
 		C319FA652D99BC130058C4B2 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA642D99BC130058C4B2 /* AuthView.swift */; };
-		C319FA672D99C4D50058C4B2 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA662D99C4D50058C4B2 /* AuthViewModel.swift */; };
 		C319FA692D9B18390058C4B2 /* DegenTrendingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA682D9B18390058C4B2 /* DegenTrendingView.swift */; };
 		C319FA732D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA722D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift */; };
 		C319FA752D9B4B110058C4B2 /* DegenTrendingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA742D9B4B110058C4B2 /* DegenTrendingViewModel.swift */; };
@@ -61,11 +61,11 @@
 		C319FA9A2DA743270058C4B2 /* Tweets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA992DA743270058C4B2 /* Tweets.swift */; };
 		C319FAA22DAD55BB0058C4B2 /* SecureSignInFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FAA12DAD55BB0058C4B2 /* SecureSignInFlowView.swift */; };
 		C319FAA42DAD64E70058C4B2 /* BiometricAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FAA32DAD64E70058C4B2 /* BiometricAuthManager.swift */; };
-		C319FAA62DAD65E70058C4B2 /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FAA52DAD65E70058C4B2 /* WebSocketManager.swift */; };
 		C38BADA12E85CD9500DF6FF2 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = C38BADA02E85CD9500DF6FF2 /* .gitignore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0647C0522E87711B0007DB2A /* WebSocketManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
 		C319FA132D8113070058C4B2 /* Asset.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Asset.swift; sourceTree = "<group>"; };
 		C319FA142D8113070058C4B2 /* CoinGecko.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoinGecko.swift; sourceTree = "<group>"; };
 		C319FA152D8113070058C4B2 /* AnyCodable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnyCodable.swift; sourceTree = "<group>"; };
@@ -91,7 +91,6 @@
 		C319FA5F2D930C1E0058C4B2 /* DegenSplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DegenSplashScreenView.swift; sourceTree = "<group>"; };
 		C319FA622D99B7F50058C4B2 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
 		C319FA642D99BC130058C4B2 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
-		C319FA662D99C4D50058C4B2 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		C319FA682D9B18390058C4B2 /* DegenTrendingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DegenTrendingView.swift; sourceTree = "<group>"; };
 		C319FA722D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DexScreenerTokenProfile.swift; sourceTree = "<group>"; };
 		C319FA742D9B4B110058C4B2 /* DegenTrendingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DegenTrendingViewModel.swift; sourceTree = "<group>"; };
@@ -113,7 +112,6 @@
 		C319FA992DA743270058C4B2 /* Tweets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tweets.swift; sourceTree = "<group>"; };
 		C319FAA12DAD55BB0058C4B2 /* SecureSignInFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SecureSignInFlowView.swift; path = ../SecureSignInFlowView.swift; sourceTree = "<group>"; };
 		C319FAA32DAD64E70058C4B2 /* BiometricAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthManager.swift; sourceTree = "<group>"; };
-		C319FAA52DAD65E70058C4B2 /* WebSocketManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
 		C388F8912D72437D003FFCFF /* Dojo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dojo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C38BADA02E85CD9500DF6FF2 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -152,8 +150,8 @@
 		C319FA1F2D8113660058C4B2 /* API */ = {
 			isa = PBXGroup;
 			children = (
-				C319FAA52DAD65E70058C4B2 /* WebSocketManager.swift */,
 				C319FA742D9B4B110058C4B2 /* DegenTrendingViewModel.swift */,
+				0647C0522E87711B0007DB2A /* WebSocketManager.swift */,
 				C319FA722D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift */,
 				C319FA4A2D837C2B0058C4B2 /* CryptoMarketFetcher.swift */,
 				C319FA452D836C5A0058C4B2 /* ApplePay.swift */,
@@ -257,7 +255,6 @@
 			isa = PBXGroup;
 			children = (
 				C319FAA12DAD55BB0058C4B2 /* SecureSignInFlowView.swift */,
-				C319FA662D99C4D50058C4B2 /* AuthViewModel.swift */,
 				C319FA642D99BC130058C4B2 /* AuthView.swift */,
 				C319FA622D99B7F50058C4B2 /* AuthManager.swift */,
 			);
@@ -449,6 +446,7 @@
 				C319FAA42DAD64E70058C4B2 /* BiometricAuthManager.swift in Sources */,
 				C319FA652D99BC130058C4B2 /* AuthView.swift in Sources */,
 				C319FA2D2D8113E40058C4B2 /* SidebarView.swift in Sources */,
+				0647C0532E87711B0007DB2A /* WebSocketManager.swift in Sources */,
 				C319FA372D8114210058C4B2 /* ManekiView.swift in Sources */,
 				C319FA982DA7395E0058C4B2 /* News.swift in Sources */,
 				C319FA1A2D8113080058C4B2 /* Chat.swift in Sources */,
@@ -470,11 +468,9 @@
 				C319FA9A2DA743270058C4B2 /* Tweets.swift in Sources */,
 				C319FA692D9B18390058C4B2 /* DegenTrendingView.swift in Sources */,
 				C319FA402D81145A0058C4B2 /* SellCryptoView.swift in Sources */,
-				C319FA672D99C4D50058C4B2 /* AuthViewModel.swift in Sources */,
 				C319FA632D99B7F50058C4B2 /* AuthManager.swift in Sources */,
 				C319FA3A2D8114420058C4B2 /* PortfolioView.swift in Sources */,
 				C319FA442D836C2C0058C4B2 /* UserProfile.swift in Sources */,
-				C319FAA62DAD65E70058C4B2 /* WebSocketManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
