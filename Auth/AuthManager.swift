@@ -1,6 +1,7 @@
 import Foundation
 import FirebaseAuth
 import AWSSQS
+import SwiftUI
 
 enum AuthError: Error {
     case noCurrentUserAfterCreatingUser
@@ -19,6 +20,8 @@ class AuthManager: ObservableObject {
             }
         }
     }
+    
+    var profilePic: UIImage?;
     
     static let shared = AuthManager()
     static let aws_region = "us-east-2"
@@ -44,7 +47,7 @@ class AuthManager: ObservableObject {
             } else {
                 print("Auth signed in")
                 if let user = Auth.auth().currentUser {
-                    self.userProfile = UserProfileViewModel(email: email, username: username)
+                    self.userProfile = UserProfileViewModel(firebase_uid: user.uid, email: email, username: username)
                     self.logInUser(user: user)
                     completion(.success(()))
                 } else {

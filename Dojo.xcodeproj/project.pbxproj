@@ -3,11 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		0647C0532E87711B0007DB2A /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647C0522E87711B0007DB2A /* WebSocketManager.swift */; };
+		065496752E8C9259000B1010 /* test.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 065496742E8C9259000B1010 /* test.rtf */; };
+		0691D4FE2EB52F3700870818 /* PostsFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0691D4FD2EB52F3400870818 /* PostsFetcher.swift */; };
 		C300AE652E84CF0900C63E96 /* AWSSQS in Frameworks */ = {isa = PBXBuildFile; productRef = C300AE642E84CF0900C63E96 /* AWSSQS */; };
 		C319FA172D8113080058C4B2 /* Asset.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA132D8113070058C4B2 /* Asset.swift */; };
 		C319FA182D8113080058C4B2 /* CoinGecko.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA142D8113070058C4B2 /* CoinGecko.swift */; };
@@ -66,6 +68,8 @@
 
 /* Begin PBXFileReference section */
 		0647C0522E87711B0007DB2A /* WebSocketManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
+		065496742E8C9259000B1010 /* test.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = test.rtf; sourceTree = "<group>"; };
+		0691D4FD2EB52F3400870818 /* PostsFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsFetcher.swift; sourceTree = "<group>"; };
 		C319FA132D8113070058C4B2 /* Asset.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Asset.swift; sourceTree = "<group>"; };
 		C319FA142D8113070058C4B2 /* CoinGecko.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoinGecko.swift; sourceTree = "<group>"; };
 		C319FA152D8113070058C4B2 /* AnyCodable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnyCodable.swift; sourceTree = "<group>"; };
@@ -116,6 +120,10 @@
 		C38BADA02E85CD9500DF6FF2 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		0691D4F92EB468B100870818 /* Feed */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Feed; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		C388F88E2D72437D003FFCFF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -150,8 +158,10 @@
 		C319FA1F2D8113660058C4B2 /* API */ = {
 			isa = PBXGroup;
 			children = (
+				0691D4FD2EB52F3400870818 /* PostsFetcher.swift */,
 				C319FA742D9B4B110058C4B2 /* DegenTrendingViewModel.swift */,
 				0647C0522E87711B0007DB2A /* WebSocketManager.swift */,
+				065496742E8C9259000B1010 /* test.rtf */,
 				C319FA722D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift */,
 				C319FA4A2D837C2B0058C4B2 /* CryptoMarketFetcher.swift */,
 				C319FA452D836C5A0058C4B2 /* ApplePay.swift */,
@@ -171,6 +181,7 @@
 		C319FA252D8113B10058C4B2 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				0691D4F92EB468B100870818 /* Feed */,
 				C319FA922DA611E20058C4B2 /* Sidebar */,
 				C319FA472D836D070058C4B2 /* SharedUI */,
 				C319FA3B2D8114530058C4B2 /* Spot */,
@@ -356,6 +367,9 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				0691D4F92EB468B100870818 /* Feed */,
+			);
 			name = Dojo;
 			packageProductDependencies = (
 				C319FA532D8619240058C4B2 /* FirebaseAnalytics */,
@@ -417,6 +431,7 @@
 				C319FA242D8113A80058C4B2 /* Preview Content in Resources */,
 				C319FA232D8113A80058C4B2 /* Assets.xcassets in Resources */,
 				C319FA512D86088F0058C4B2 /* GoogleService-Info.plist in Resources */,
+				065496752E8C9259000B1010 /* test.rtf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -445,6 +460,7 @@
 				C319FA792D9B54B20058C4B2 /* DegenTradeModels.swift in Sources */,
 				C319FAA42DAD64E70058C4B2 /* BiometricAuthManager.swift in Sources */,
 				C319FA652D99BC130058C4B2 /* AuthView.swift in Sources */,
+				0691D4FE2EB52F3700870818 /* PostsFetcher.swift in Sources */,
 				C319FA2D2D8113E40058C4B2 /* SidebarView.swift in Sources */,
 				0647C0532E87711B0007DB2A /* WebSocketManager.swift in Sources */,
 				C319FA372D8114210058C4B2 /* ManekiView.swift in Sources */,

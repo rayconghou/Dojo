@@ -45,7 +45,12 @@ struct HomePageView: View {
             ZStack {
                 TabView(selection: $selectedTab) {
                     if currentMode == .standard {
-                        SpotView(hideHamburger: $hideHamburger, hamburgerAction: {
+//                        SpotView(hideHamburger: $hideHamburger, hamburgerAction: {
+//                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
+//                                showSidebar.toggle()
+//                            }
+//                        })
+                        FeedView(hideHamburger: $hideHamburger, hamburgerAction: {
                             withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
                                 showSidebar.toggle()
                             }

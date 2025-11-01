@@ -37,10 +37,18 @@ struct SidebarView: View {
                     showProfileSettings = true
                 }) {
                     HStack(spacing: 15) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .frame(width: 50, height: 50)
-                            .foregroundColor(.white)
+                        if let profilePic = userProfile.profilePic {
+                            Image(uiImage: profilePic)
+                                .resizable()
+                                .frame(width: 50, height: 50)
+                                .foregroundColor(.white)
+                                .clipShape(Circle())
+                        } else {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .frame(width: 50, height: 50)
+                                .foregroundColor(.white)
+                        }
                         VStack(alignment: .leading, spacing: 4) {
                             Text(userProfile.username)
                                 .font(.custom("Inter", size: 20))
@@ -343,7 +351,7 @@ struct SidebarView_Previews: PreviewProvider {
         SidebarView(showSidebar: .constant(true),
                     showDegenMode: .constant(false),
                     selectedTab: .constant(0),
-                    userProfile: UserProfileViewModel(email: "jameswang@example.com", username: "James Wang"))
+                    userProfile: UserProfileViewModel(firebase_uid: "0", email: "jameswang@example.com", username: "James Wang"))
             .preferredColorScheme(.dark)
     }
 }

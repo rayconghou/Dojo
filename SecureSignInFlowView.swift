@@ -95,7 +95,7 @@ class SecureSignInFlowViewModel: ObservableObject {
     init() {
         // Authentication checks
         if let storedPin = KeychainHelper.read(forKey: "userPin") {
-            self.pin = storedPin
+//            self.pin = storedPin
             self.currentStep = .pinEntry
         } else {
             self.currentStep = .createPin
@@ -104,12 +104,12 @@ class SecureSignInFlowViewModel: ObservableObject {
 
     // MARK: PIN Flow
     func appendPin(digit: String) {
-        print("DEBUG: appendPin called with digit: \(digit), currentStep: \(currentStep), current pin: '\(pin)'")
+//        print("DEBUG: appendPin called with digit: \(digit), currentStep: \(currentStep), current pin: '\(pin)'")
         switch currentStep {
         case .createPin:
             if pin.count < 6 {
                 pin += digit
-                print("DEBUG: CreatePin - pin now: '\(pin)'")
+//                print("DEBUG: CreatePin - pin now: '\(pin)'")
                 if pin.count == 6 {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         withAnimation(.spring(response: 0.3)) {
@@ -121,7 +121,7 @@ class SecureSignInFlowViewModel: ObservableObject {
         case .confirmPin:
             if confirmPin.count < 6 {
                 confirmPin += digit
-                print("DEBUG: ConfirmPin - confirmPin now: '\(confirmPin)'")
+//                print("DEBUG: ConfirmPin - confirmPin now: '\(confirmPin)'")
                 if confirmPin.count == 6 {
                     validatePins()
                 }
@@ -129,7 +129,7 @@ class SecureSignInFlowViewModel: ObservableObject {
         case .pinEntry:
             if pin.count < 6 {
                 pin += digit
-                print("DEBUG: PinEntry - pin now: '\(pin)'")
+//                print("DEBUG: PinEntry - pin now: '\(pin)'")
                 if pin.count == 6 {
                     validatePinEntry()
                 }

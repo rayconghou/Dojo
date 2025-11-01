@@ -10,6 +10,7 @@ import SwiftUI
 import LocalAuthentication
 
 struct PINEntryView: View {
+    @ObservedObject var authManager = AuthManager.shared
     @ObservedObject var viewModel: SecureSignInFlowViewModel
     @State private var biometricAttempted = false
     
@@ -33,22 +34,34 @@ struct PINEntryView: View {
                 // Profile section
                 VStack(spacing: 20) {
                     // Profile picture
-                    Image("Profile")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                    
-                    // Greeting text
-                    Text("Good evening, James")
-                        .font(.system(size: 28, weight: .medium))
-                        .foregroundColor(.white)
+                    if let userProfile = authManager.userProfile, let image = userProfile.profilePic {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 100)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                        // Greeting text
+                        Text("Good evening,\n" + userProfile.username)
+                            .font(.system(size: 28, weight: .medium))
+                            .foregroundColor(.white)
+                    } else {
+//                        Image("Profile")
+//                            .resizable()
+//                            .aspectRatio(contentMode: .fill)
+//                            .frame(width: 100, height: 100)
+//                            .clipShape(RoundedRectangle(cornerRadius: 12))
+//                            .overlay(
+//                                RoundedRectangle(cornerRadius: 12)
+//                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+//                            )
+                    }
                 }
                 .modifier(ShakeEffect(animatableData: viewModel.pinError ? 1 : 0))
+                .frame(height: 190)
                 
                 Spacer().frame(height: 50)
                 

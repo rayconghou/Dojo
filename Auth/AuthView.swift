@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import FirebaseAuth
 
 struct AuthView: View {
     @State private var email = ""
@@ -54,9 +55,11 @@ struct AuthView: View {
                 
                 if isNewUser {
                     AuthManager.shared.signUp(email: email, password: password, username: username) {result in
-                        let userProfile = UserProfileViewModel(email: email, username: username)
+                        if let unwrapped_user = Auth.auth().currentUser {
+                            let userProfile = UserProfileViewModel(firebase_uid: unwrapped_user.uid, email: email, username: username)
+                            AuthManager.shared.userProfile = userProfile
+                        }
                         
-                        AuthManager.shared.userProfile = userProfile
                         switch result {
                         case .success:
                             break

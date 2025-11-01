@@ -776,12 +776,12 @@ class CryptoMarketViewModel: ObservableObject {
     @Published var selectedCoinDetail: CoinDetail?
     
     init() {
-//        fetchData()
-//        fetchTimer
-//            .sink { [weak self] _ in
-//                self?.fetchData()
-//            }
-//            .store(in: &cancellables)
+        fetchData()
+        fetchTimer
+            .sink { [weak self] _ in
+                self?.fetchData()
+            }
+            .store(in: &cancellables)
     }
     
     func fetchData() {

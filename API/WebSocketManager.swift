@@ -8,11 +8,14 @@
 
 import Foundation
 import FirebaseAuth
+import UIKit
 
 enum WebSocketError: Error {
     case badResponse
     case badIdToken
     case forgotUID
+    case unknownMessageType
+    case badImageData
 }
 
 class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
@@ -46,8 +49,13 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
     }
 
     func send(message: String) {
+//        if (isConnected) {
+//            
+//        }
+//        print("TEST: \(isConnected)")
+        
         let message = URLSessionWebSocketTask.Message.string(message)
-        webSocketTask?.send(message) { error in
+        self.webSocketTask?.send(message) { error in
             if let error = error {
                 print("Error sending message: \(error)")
             }
@@ -62,7 +70,7 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
             case .success(let message):
                 switch message {
                 case .string(let text):
-                    print("Received text: \(text)")
+//                    print("Received text: \(text)")
                     
                     // Process the received message
                     Task {
@@ -79,23 +87,60 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
                             return
                         }
                         
-                        struct userProperties: Decodable {
+                        struct ResponseMessageProperties: Decodable {
+                            let message_type: String
+                        }
+                        
+                        struct UserProperties: Decodable {
                             let email: String
                             let username: String
                         }
+                        struct ObjectProperties: Decodable {
+                            let data_base_64_encoded_string: String
+                        }
                         
-                        struct errorResponse: Decodable {
+                        struct ErrorResponse: Decodable {
                             let message: String
                             let error: String
                         }
                         
                         do {
-                            let userProfileProperties = try decoder.decode(userProperties.self, from: jsonData)
-                            AuthManager.shared.userProfile = UserProfileViewModel(email: userProfileProperties.email, username: userProfileProperties.username)
+                            let responseMessageProperties = try decoder.decode(ResponseMessageProperties.self, from: jsonData)
+                            let messageType = responseMessageProperties.message_type
+                            print("messageType: \(messageType)")
+                            
+                            switch messageType {
+                            case "getUserProfile":
+                                let userProperties = try decoder.decode(UserProperties.self, from: jsonData)
+                                if let unwrapped_firebase_uid = self?.firebase_uid {
+                                    AuthManager.shared.userProfile = UserProfileViewModel(firebase_uid: unwrapped_firebase_uid, email: userProperties.email, username: userProperties.username)
+                                } else {
+                                    throw WebSocketError.forgotUID
+                                }
+                            case "getUserProfilePic":
+                                let objectProperties = try decoder.decode(ObjectProperties.self, from: jsonData)
+                                if objectProperties.data_base_64_encoded_string != "File not found" {
+                                    if let data = Data(base64Encoded: objectProperties.data_base_64_encoded_string) {
+                                        if let userProfile = AuthManager.shared.userProfile {
+                                            userProfile.profilePic = UIImage(data: data)
+                                        } else {
+                                            AuthManager.shared.profilePic = UIImage(data: data)
+                                        }
+                                    } else {
+                                        throw WebSocketError.badImageData
+                                    }
+                                }
+                            case "getPost":
+                                let postProperties = try decoder.decode(Post.self, from:jsonData)
+                                // TEMP
+                                PostsViewModel.shared.posts.append(postProperties);
+                            default:
+                                throw WebSocketError.unknownMessageType
+                            }
                         } catch {
                             // If that fails, try to decode as error response
                             do {
-                                let errorResponse = try decoder.decode(errorResponse.self, from: jsonData)
+                                let errorResponse = try decoder.decode(ErrorResponse.self, from: jsonData)
                                 print("Backend error: \(errorResponse.message) - \(errorResponse.error)")
                             } catch {
                                 print("Error decoding JSON: \(error.localizedDescription)")
@@ -119,6 +164,7 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         print("WebSocket connection opened.")
         receiveMessage() // Start receiving messages once connected
+//        sendPing() // Continually ping to maintain connection
         
         isConnected = true
         
@@ -128,6 +174,9 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
         } else {
             getUserProfile()
         }
+        
+//        TEMP
+        PostsViewModel.shared.fetchData();
     }
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
@@ -139,7 +188,8 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
     
     func getUserProfile() {
         if let unwrapped_firebase_uid = firebase_uid {
-            send(message: "{\"action\": \"getUserProfile\", \"firebase_uid\": \"" + unwrapped_firebase_uid + "\"}")
+            send(message: "{\"action\": \"getUserProfile\", \"message_type\": \"getUserProfile\", \"firebase_uid\": \"" + unwrapped_firebase_uid + "\"}")
+            send(message: "{\"action\": \"getObjectDojoS3\", \"message_type\": \"getUserProfilePic\", \"object_name\":\"\(unwrapped_firebase_uid).jpeg\"}")
         } else {
             print("Error: \(WebSocketError.forgotUID)")
         }
@@ -147,7 +197,14 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
     
     func addUserProfileToDB(email: String, username: String) {
         if let unwrapped_firebase_uid = firebase_uid {
-            ContentView.webSocketManager.send(message: "{\"action\": \"addUserProfile\", \"firebase_uid\":\"\(unwrapped_firebase_uid)\",\"username\":\"\(username)\",\"email\":\"\(email)\"}")
+            send(message: "{\"action\": \"addUserProfile\", \"firebase_uid\":\"\(unwrapped_firebase_uid)\",\"username\":\"\(username)\",\"email\":\"\(email)\"}")
+//            Task {
+//                if let fileURL = Bundle.main.url(forResource: "test", withExtension: ".rtf") {
+//                    let data = try Data(contentsOf: fileURL)
+//                    print("TEMP sending .txt instead of image")
+//                    send(message: "{\"action\": \"addObjectDojoS3\", \"data_base_64_encoded_string\":\"\(data.base64EncodedString())\", \"firebase_uid\":\"\(unwrapped_firebase_uid)\", \"file_extension\":\".txt\"}")
+//                }
+//            }
         } else {
             print("Error: \(WebSocketError.forgotUID)")
         }
