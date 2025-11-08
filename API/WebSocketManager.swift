@@ -75,6 +75,7 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
                     // Process the received message
                     Task {
                         let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .secondsSince1970
                         guard let jsonData = text.data(using: .utf8) else {
                             print("Error:", WebSocketError.badResponse)
                             throw WebSocketError.badResponse
@@ -85,6 +86,10 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
                             print("Backend error received: \(text)")
                             // Don't try to decode error messages as user profile
                             return
+                        }
+                        
+                        struct idAble: Decodable {
+                            let id: String
                         }
                         
                         struct ResponseMessageProperties: Decodable {
@@ -112,7 +117,7 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
                             switch messageType {
                             case "getUserProfile":
                                 let userProperties = try decoder.decode(UserProperties.self, from: jsonData)
-                                if let unwrapped_firebase_uid = self?.firebase_uid {
+                                if let unwrapped_firebase_uid = self!.firebase_uid {
                                     AuthManager.shared.userProfile = UserProfileViewModel(firebase_uid: unwrapped_firebase_uid, email: userProperties.email, username: userProperties.username)
                                 } else {
                                     throw WebSocketError.forgotUID
@@ -130,10 +135,87 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
                                         throw WebSocketError.badImageData
                                     }
                                 }
-                            case "getPost":
-                                let postProperties = try decoder.decode(Post.self, from:jsonData)
-                                // TEMP
-                                PostsViewModel.shared.posts.append(postProperties);
+                                //                            case "getPost":
+                                //                                let postProperties = try decoder.decode(Post.self, from:jsonData)
+                                //                                // TEMP
+                                //                                PostsViewModel.shared.posts.append(postProperties);
+                                //
+                                //                                if (postProperties.poster_uid != self!.firebase_uid && !PostsViewModel.hasOtherUser(otherUsers: PostsViewModel.shared.otherUsers, firebase_uid: postProperties.poster_uid)) {
+                                //                                    self!.send(message: "{\"action\": \"getUserProfile\", \"message_type\": \"getOtherUserProfile\", \"firebase_uid\": \"" + postProperties.poster_uid + "\"}")
+                                //                                }
+                                
+                            // TEMP: Will need to add refresh case
+                            case "refreshFeedPosts":
+                                // TEMP: Only able to refresh from start (if post array becomes disjointed, then I cut off the old stuff)
+                                // TEMP: Assumes posts are sorted chronologically
+                                
+                                struct ResponseWrapper: Decodable {
+                                    let rows: [Post]
+                                    let N: Int
+                                    let feed_key: String
+                                }
+                                
+                                let postsProperties = try decoder.decode(ResponseWrapper.self, from: jsonData)
+                                
+                                if let feed = FeedModel.feeds[postsProperties.feed_key] {
+                                    var newFeedPosts = postsProperties.rows
+                                    // For now, if posts become disjoin discard old stuff
+                                    if (postsProperties.rows.count < postsProperties.N) {
+                                        newFeedPosts.append(contentsOf: feed.posts)
+                                    }
+                                    feed.posts = newFeedPosts
+                                    
+                                    for postProperties in postsProperties.rows {
+                                        if (postProperties.poster_uid != self!.firebase_uid && !FeedModel.hasOtherUser(firebase_uid: postProperties.poster_uid)) {
+                                            self!.send(message: "{\"action\": \"getUserProfile\", \"message_type\": \"getOtherUserProfile\", \"firebase_uid\": \"" + postProperties.poster_uid + "\"}")
+                                        }
+                                    }
+                                }
+                            case "addFeedPosts":
+                                struct ResponseWrapper: Decodable {
+                                    let rows: [Post]
+                                    let N: Int
+                                    let feed_key: String
+                                }
+                                
+                                let postsProperties = try decoder.decode(ResponseWrapper.self, from: jsonData)
+                                
+                                if let feed = FeedModel.feeds[postsProperties.feed_key] {
+                                    if (postsProperties.rows.count < postsProperties.N) {
+                                        feed.noMorePosts = true
+                                    }
+                                    feed.posts.append(contentsOf: postsProperties.rows)
+                                    feed.posts = feed.posts
+                                    
+                                    for postProperties in postsProperties.rows {
+                                        if (postProperties.poster_uid != self!.firebase_uid && !PostsViewAbstractModel.hasOtherUser(firebase_uid: postProperties.poster_uid)) {
+                                            self!.send(message: "{\"action\": \"getUserProfile\", \"message_type\": \"getOtherUserProfile\", \"firebase_uid\": \"" + postProperties.poster_uid + "\"}")
+                                        }
+                                    }
+                                    
+                                }
+                            case "getOtherUserProfile":
+                                let userProperties = try decoder.decode(OtherUser.self, from: jsonData)
+                                FeedModel.otherUserHavingFeed.otherUsers.append(userProperties)
+                                FeedModel.otherUserHavingFeed.otherUsers = FeedModel.otherUserHavingFeed.otherUsers
+                                
+                                self!.send(message: "{\"action\": \"getObjectDojoS3\", \"message_type\": \"getOtherUserProfilePic\", \"id\":\"\(userProperties.firebase_uid)\", \"object_name\":\"\(userProperties.firebase_uid).jpeg\"}")
+                            case "getOtherUserProfilePic":
+                                let objectProperties = try decoder.decode(ObjectProperties.self, from: jsonData)
+                                if objectProperties.data_base_64_encoded_string != "File not found" {
+                                    if let data = Data(base64Encoded: objectProperties.data_base_64_encoded_string) {
+                                        let idProperties = try decoder.decode(idAble.self, from: jsonData)
+                                        
+                                        if let otherUserIndex = FeedModel.otherUserHavingFeed.otherUsers.firstIndex(where: { $0.firebase_uid == idProperties.id }) {
+                                            FeedModel.otherUserHavingFeed.otherUsers[otherUserIndex].profilePic = data
+                                            
+                                            // TEMP: to update
+                                            FeedModel.otherUserHavingFeed.otherUsers = FeedModel.otherUserHavingFeed.otherUsers
+                                        }
+                                    } else {
+                                        throw WebSocketError.badImageData
+                                    }
+                                }
                             default:
                                 throw WebSocketError.unknownMessageType
                             }
@@ -174,9 +256,6 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
         } else {
             getUserProfile()
         }
-        
-//        TEMP
-        PostsViewModel.shared.fetchData();
     }
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
@@ -189,7 +268,7 @@ class WebSocketManager: NSObject, URLSessionWebSocketDelegate {
     func getUserProfile() {
         if let unwrapped_firebase_uid = firebase_uid {
             send(message: "{\"action\": \"getUserProfile\", \"message_type\": \"getUserProfile\", \"firebase_uid\": \"" + unwrapped_firebase_uid + "\"}")
-            send(message: "{\"action\": \"getObjectDojoS3\", \"message_type\": \"getUserProfilePic\", \"object_name\":\"\(unwrapped_firebase_uid).jpeg\"}")
+            send(message: "{\"action\": \"getObjectDojoS3\", \"message_type\": \"getUserProfilePic\", \"id\": null, \"object_name\":\"\(unwrapped_firebase_uid).jpeg\"}")
         } else {
             print("Error: \(WebSocketError.forgotUID)")
         }

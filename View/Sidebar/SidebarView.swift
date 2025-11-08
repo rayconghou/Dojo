@@ -66,7 +66,8 @@ struct SidebarView: View {
                     .padding(.leading, 20)
                 }
                 .sheet(isPresented: $showProfileSettings) {
-                    ProfileSettingsView(userProfile: userProfile)
+//                    ProfileSettingsView(userProfile: userProfile)
+                    ProfileView(userProfile: userProfile)
                 }
                 
                 Divider()

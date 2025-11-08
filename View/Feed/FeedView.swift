@@ -7,20 +7,25 @@
 
 import SwiftUI
 
-struct FeedView: View {
+struct FeedView<T: PostsViewAbstractModel & PostsViewProtocol>: View {
+    
     @Binding var hideHamburger: Bool
     var hamburgerAction: () -> Void
     @State private var selectedPost: Post? = nil
     @State private var scrollOffset: CGFloat = 0
     @State private var showCreatePostModal = false
     @State private var searchText = ""
-
+    @ObservedObject var userProfile: UserProfileViewModel
+    @ObservedObject var postsViewModel: T
+    
     // Sorted and filtered coins based on selected option and search text
     var posts: [Post] {
-        let sorted = PostsViewModel.shared.posts.sorted() { $0.created_at > $1.created_at
-        }
+        return postsViewModel.posts
         
-        return sorted
+//        let sorted = PostsViewModel.feed.posts.sorted() { $0.created_at > $1.created_at
+//        }
+//        
+//        return sorted
         
 //        TEMP: Will be useful for user posts
 //        if searchText.isEmpty {
@@ -33,6 +38,16 @@ struct FeedView: View {
 //        }
     }
     
+    struct LoadingView: UIViewRepresentable {
+        func makeUIView(context: Context) -> UIActivityIndicatorView {
+            let spinner = UIActivityIndicatorView()
+            spinner.startAnimating()
+            return spinner
+        }
+        
+        func updateUIView(_ uiView: UIActivityIndicatorView, context: Context) { }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Search Bar
@@ -40,7 +55,7 @@ struct FeedView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.gray)
                 
-                TextField("Search coins", text: $searchText)
+                TextField("Search posts", text: $searchText)
                     .foregroundColor(.white)
                 
                 if !searchText.isEmpty {
@@ -57,7 +72,7 @@ struct FeedView: View {
             .background(Color.clear)
             .cornerRadius(10)
             
-            // List of coins in a scrollable view
+            // List of posts in a scrollable view
             ZStack {
                 ScrollView {
                     LazyVStack(spacing: 16) {
@@ -71,17 +86,31 @@ struct FeedView: View {
 //                                change: coin.price_change_percentage_24h ?? 0,
 //                                sparkline: coin.sparkline_in_7d?.price.last24Hours ?? coin.sparkline_in_7d?.price ?? []
 //                            )
-                            Text(post.text)
-                            .padding()
-                            .background(Color.gray.opacity(0.15))
-                            .cornerRadius(12)
-                            .onTapGesture {
-                                selectedPost = post
+                            if let userProfile = AuthManager.shared.userProfile, userProfile.firebase_uid == post.poster_uid {
+                                PostCard(post: post, username: userProfile.username, profilePic: userProfile.profilePic, likes_count: post.likes_count, we_liked_it: false, selectedPost: $selectedPost
+                                    )
+                            } else if let otherUser = FeedModel.otherUserHavingFeed.otherUsers.first(where: { $0.firebase_uid == post.poster_uid }) {
+                                if let profilePicData = otherUser.profilePic {
+                                    PostCard(post: post, username: otherUser.username, profilePic: UIImage(data: profilePicData), likes_count: post.likes_count, we_liked_it: post.we_liked_it, selectedPost: $selectedPost)
+                                } else {
+                                    PostCard(post: post, username: otherUser.username, profilePic: nil, likes_count: post.likes_count, we_liked_it: post.we_liked_it, selectedPost: $selectedPost)
+                                }
+                            } else {
+                                Text("LOADING")
                             }
+                            
                             // MAKE PostCard IN PostsFetcher?
+                        }
+                        if (!postsViewModel.noMorePosts) {
+                            LoadingView().onAppear(perform: {
+                                postsViewModel.fetchNewPosts()
+                            })
                         }
                     }
                     .padding()
+                }
+                .refreshable {
+                    postsViewModel.refreshPosts()
                 }
                 
 //                TEMP: Make this into a "+" post button
@@ -112,8 +141,7 @@ struct FeedView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 20)
                     .sheet(isPresented: $showCreatePostModal) {
-//                        TEMP, create create post view
-                        BuyCryptoView()
+                        CreatePostView(userProfile: userProfile)
                     }
                 }
             }
@@ -121,6 +149,7 @@ struct FeedView: View {
         }
         .background(Color.black.edgesIgnoringSafeArea(.all))
         .sheet(item: $selectedPost) { post in
+//            TEMP: Add post view
 //            CoinDetailModalView(coin: coin, marketVM: marketVM)
         }
     }
@@ -149,7 +178,11 @@ struct FeedView: View {
 struct FeedView_Previews: PreviewProvider {
     @State static var hideHamburger = false
     static var previews: some View {
-        FeedView(hideHamburger: $hideHamburger, hamburgerAction: {})
-            .preferredColorScheme(.dark)
+        FeedView(hideHamburger: $hideHamburger,
+                 hamburgerAction: {},
+                 userProfile: UserProfileViewModel(firebase_uid: "test_uid", email: "test@gmail.com", username: "test"),
+                 postsViewModel: FeedModel.otherUserHavingFeed
+        )
+        .preferredColorScheme(.dark)
     }
 }

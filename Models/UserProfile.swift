@@ -32,6 +32,79 @@ class UserProfileViewModel: ObservableObject {
     }
 }
 
+struct ProfileView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    @ObservedObject var userProfile: UserProfileViewModel
+    
+    @State private var selectedPickerItem: PhotosPickerItem?
+    
+    private let DIST_FROM_TOP_TO_DIVIDER = 100.0
+    private let IMAGE_DIAMETER = 100.0
+    
+    var body: some View {
+        ZStack {
+            // Background
+            VStack {
+                Spacer()
+                    .frame(height: DIST_FROM_TOP_TO_DIVIDER)
+                Color.black
+            }
+            
+            // Foreground
+            VStack() {
+                Spacer()
+                    .frame(height:DIST_FROM_TOP_TO_DIVIDER - (IMAGE_DIAMETER / 2.0))
+                PhotosPicker(selection: $selectedPickerItem, matching: .images) {
+                    if let profilePic = userProfile.profilePic {
+                        Image(uiImage: profilePic)
+                            .resizable()
+                            .frame(width: IMAGE_DIAMETER, height: IMAGE_DIAMETER)
+                            .foregroundColor(.white)
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .frame(width: IMAGE_DIAMETER, height: IMAGE_DIAMETER)
+                            .foregroundColor(.white)
+                    }
+                }
+                .onChange(of: selectedPickerItem) { oldItem, newItem in
+                    Task {
+                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                            if var uiImage = UIImage(data: data) {
+                                if uiImage.size.width * uiImage.size.height > UserProfileViewModel.pixelLimit {
+                                    let ratioTooLargeBy = (uiImage.size.width * uiImage.size.height) / UserProfileViewModel.pixelLimit
+                                    let sideMultiplier = 1 / (ratioTooLargeBy.squareRoot())
+                                    let targetSize = CGSize(width: floor(uiImage.size.width * sideMultiplier), height: floor(uiImage.size.height * sideMultiplier))
+                                    let renderer = UIGraphicsImageRenderer(size: targetSize)
+                                    uiImage = renderer.image {context in
+                                        uiImage.draw(in: CGRect(origin: .zero, size: targetSize))
+                                    }
+                                }
+                                
+                                print(data.base64EncodedString().count)
+                                if let jpegData = uiImage.jpegData(compressionQuality: 0) {
+                                    userProfile.profilePic = uiImage
+                                    
+                                    //                              Send to DB
+                                    print(jpegData.base64EncodedString().count)
+                                    ContentView.webSocketManager.send(message: "{\"action\": \"addObjectDojoS3\", \"data_base_64_encoded_string\":\"\(jpegData.base64EncodedString())\", \"firebase_uid\":\"\(userProfile.firebase_uid)\", \"file_extension\":\".jpeg\"}")
+                                }
+                            }
+                        }
+                    }
+                }
+                Text(userProfile.username)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                Divider()
+                Spacer()
+            }
+        }
+    }
+}
+
 struct ProfileSettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var userProfile: UserProfileViewModel

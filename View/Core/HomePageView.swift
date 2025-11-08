@@ -50,11 +50,16 @@ struct HomePageView: View {
 //                                showSidebar.toggle()
 //                            }
 //                        })
-                        FeedView(hideHamburger: $hideHamburger, hamburgerAction: {
+                        FeedView(
+                            hideHamburger: $hideHamburger,
+                            hamburgerAction: {
                             withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
-                                showSidebar.toggle()
-                            }
-                        })
+                                    showSidebar.toggle()
+                                }
+                            },
+                            userProfile: userProfile,
+                            postsViewModel: FeedModel.feeds["main"]!
+                        )
                         .tag(0)
                         .tabItem {
                             Image(systemName: "binoculars.fill")
@@ -351,7 +356,7 @@ struct HomePageView: View {
     private var selectedTabTitle: String {
       if currentMode == .standard {
         switch selectedTab {
-        case 0: return "Spot"
+        case 0: return "Feed"
         case 1: return "Indexes"
         case 2: return "Maneki"
         case 3: return "Portfolio"

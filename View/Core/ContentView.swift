@@ -9,8 +9,6 @@ import SwiftUI
 import Combine
 import FirebaseAuth
 
-import AWSSQS
-
 // MARK: - Main ContentView with Splash Screen
 
 enum ContentError: Error {

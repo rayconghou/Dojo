@@ -27,3 +27,16 @@ struct DojoApp: App {
         }
     }
 }
+
+// MARK: - Preview
+struct DojoApp_Previews: PreviewProvider {
+    static var previews: some View {
+        if AuthManager.shared.isLoggedIn {
+            ContentView()
+//            TEMP:
+                .preferredColorScheme(.dark)
+        } else {
+            AuthView()
+        }
+    }
+}

@@ -28,6 +28,9 @@ class AuthManager: ObservableObject {
     
     var userProfile: UserProfileViewModel? {
         didSet {
+    //        TEMP
+            FeedModel.feeds["main"]!.fetchNewPosts();
+            
             DispatchQueue.main.async {
                 self.hasUserProfile = self.userProfile != nil
             }
