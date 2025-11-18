@@ -35,8 +35,16 @@ extension Font {
 
 // MARK: - Main ContentView with Splash Screen
 
+enum ContentError: Error {
+    case liesAboutHavingUserProfile
+}
+
 struct ContentView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
+    @ObservedObject var authManager: AuthManager
+    
+    init () {
+        authManager = AuthManager.shared
+    }
     
     @State private var hideSplash = false
     @State private var showDojo = false
@@ -49,10 +57,12 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             Group {
-                if authViewModel.isLoggedIn {
-                    if let userProfile = AuthManager.shared.userProfile {
-                        SecureSignInFlowView(userProfile: userProfile)
-                            .environmentObject(ContentView.securityViewModel)
+                if authManager.isLoggedIn {
+                    if authManager.hasUserProfile {
+                        if let userProfile = authManager.userProfile {
+                            SecureSignInFlowView(userProfile: userProfile)
+                                .environmentObject(ContentView.securityViewModel)
+                        }
                     } else {
                         // Loading state - will be replaced by mock profile after splash
                         VStack(spacing: 20) {
@@ -74,14 +84,15 @@ struct ContentView: View {
                 } else {
                     // Fallback to AuthView with debug info
                     VStack {
-                        AuthView()
+                        // TEMP
+//                        AuthView()
                         
                         // Debug info
                         VStack {
                             Text("Debug Info:")
                                 .font(.caption)
                                 .foregroundColor(.gray)
-                            Text("isLoggedIn: \(authViewModel.isLoggedIn ? "true" : "false")")
+                            Text("isLoggedIn: \(authManager.isLoggedIn ? "true" : "false")")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                             Text("hideSplash: \(hideSplash ? "true" : "false")")
@@ -168,7 +179,6 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-            .environmentObject(AuthViewModel())
     }
 }
 

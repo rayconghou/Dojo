@@ -18,6 +18,7 @@ struct HomePageView: View {
     @State private var showDojo = false
     @State private var showLogo = false
     @State private var showBottomElements = false
+    @State private var search_text = ""
     @State private var showToolbar = true // New state for toolbar visibility
     @State private var userProfile: UserProfileViewModel
     @StateObject private var tradingWalletViewModel = TradingWalletViewModel()
@@ -47,11 +48,40 @@ struct HomePageView: View {
             ZStack {
                 TabView(selection: $selectedTab) {
                     if currentMode == .standard {
-                        SpotView(hideHamburger: $hideHamburger, hamburgerAction: {
-                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
-                                showSidebar.toggle()
+                        //                        SpotView(hideHamburger: $hideHamburger, hamburgerAction: {
+                        //                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
+                        //                                showSidebar.toggle()
+                        //                            }
+                        //                        })
+                        ZStack {
+                            if AuthManager.shared.hasUserProfile {
+                                if let main_feed = FeedModel.feeds["main"] {
+                                    ZStack {
+                                        FeedView(
+                                            hide_hamburger: $hideHamburger,
+                                            hamburger_action: {
+                                                withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
+                                                    showSidebar.toggle()
+                                                }
+                                            },
+                                            search_text: $search_text,
+                                            show_search_bar: false,
+                                            userProfile: userProfile,
+                                            postsViewModel: main_feed
+                                        )
+                                        
+                                        //                 Floating + (create post) button
+                                        AddPostButton(
+                                            preceding_post_id: nil,
+                                            current_feed: main_feed,
+                                            user_profile: userProfile
+                                        )
+                                    }
+                                }
+                            } else {
+                                Text("LOADING")
                             }
-                        })
+                        }
                         .tag(0)
                         .tabItem {
                             VStack {
@@ -66,7 +96,7 @@ struct HomePageView: View {
                         .scaleEffect(showSidebar ? 0.95 : 1.0)
                         .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
                         .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
+                        
                         IndexesView(hamburgerAction: {
                             withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
                                 showSidebar.toggle()
@@ -86,7 +116,7 @@ struct HomePageView: View {
                         .scaleEffect(showSidebar ? 0.95 : 1.0)
                         .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
                         .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
+                        
                         ManekiView(hamburgerAction: {
                             withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
                                 showSidebar.toggle()
@@ -239,6 +269,54 @@ struct HomePageView: View {
                             }
                             .accentColor(.white)
                     }
+//                    } else {
+//                        DegenTrendingView()
+//                            .tag(0)
+//                            .tabItem {
+//                                Image(systemName: "flame")
+//                            }
+//                            .scaleEffect(showSidebar ? 0.95 : 1.0)
+//                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+//                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+//
+//                        WalletSocialMediaTrackerView()
+//                            .tag(1)
+//                            .tabItem {
+//                                Image(systemName: "wallet.pass")
+//                            }
+//                            .environmentObject(tradingWalletViewModel)
+//                            .scaleEffect(showSidebar ? 0.95 : 1.0)
+//                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+//                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+//
+//                        DegenTradeView()
+//                            .tag(2)
+//                            .tabItem {
+//                                Image(systemName: "arrow.triangle.2.circlepath")
+//                            }
+//                            .scaleEffect(showSidebar ? 0.95 : 1.0)
+//                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+//                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+//
+//                        PortfolioView(hamburgerAction: {
+//                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
+//                                showSidebar.toggle()
+//                            }
+//                        })
+//                            .tag(3)
+//                            .tabItem {
+//                                Image(systemName: "briefcase")
+//                            }
+//                            .scaleEffect(showSidebar ? 0.95 : 1.0)
+//                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+//                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+//
+//                        Color.clear
+//                            .tag(degenExitTabTag)
+//                            .tabItem {
+//                                Image(systemName: "rectangle.portrait.and.arrow.right")
+//                            }
+//                    }
                 }
                 .scaleEffect(showSidebar ? 0.95 : 1.0)
                 .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
@@ -250,9 +328,11 @@ struct HomePageView: View {
                 
                 // Existing Sidebar View
                 SidebarView(
+                    hideHamburger: $hideHamburger,
                     showSidebar: $showSidebar,
                     showDegenMode: $showDegenMode,
                     selectedTab: $selectedTab,
+                    search_text: $search_text,
                     userProfile: userProfile
                 )
                 .frame(width: UIScreen.main.bounds.width)
@@ -336,25 +416,25 @@ struct HomePageView: View {
                     hideHamburger = newValue
                 }
             }
-            .onChange(of: showDegenMode) { oldValue, newValue in
-                if newValue && currentMode == .standard {
-                    // Instead of immediately activating, show the warning first
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        showDegenEntryWarning = true
-                    }
-                }
-            }
-            .onChange(of: selectedTab) { oldValue, newValue in
-                if currentMode == .degen && newValue == degenExitTabTag {
-                    selectedTab = oldValue
-                    requestExitDegenMode()
-                } else if currentMode == .standard && newValue == degenEntryTabTag {
-                    selectedTab = oldValue
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        showDegenEntryWarning = true
-                    }
-                }
-            }
+//            .onChange(of: showDegenMode) { oldValue, newValue in
+//                if newValue && currentMode == .standard {
+//                    // Instead of immediately activating, show the warning first
+//                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+//                        showDegenEntryWarning = true
+//                    }
+//                }
+//            }
+//            .onChange(of: selectedTab) { oldValue, newValue in
+//                if currentMode == .degen && newValue == degenExitTabTag {
+//                    selectedTab = oldValue
+//                    requestExitDegenMode()
+//                } else if currentMode == .standard && newValue == degenEntryTabTag {
+//                    selectedTab = oldValue
+//                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+//                        showDegenEntryWarning = true
+//                    }
+//                }
+//            }
         }
     }
     
@@ -389,7 +469,7 @@ struct HomePageView: View {
     private var selectedTabTitle: String {
       if currentMode == .standard {
         switch selectedTab {
-        case 0: return "Spot"
+        case 0: return "Feed"
         case 1: return "Indexes"
         case 2: return "Maneki"
         case 3: return "Portfolio"

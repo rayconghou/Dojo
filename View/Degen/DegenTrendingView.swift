@@ -34,7 +34,6 @@ enum VerificationFilter: String, CaseIterable {
 }
 
 struct DegenTrendingView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject var degenVM = DegenTrendingViewModel()
 
     @State private var searchText = ""

@@ -95,7 +95,7 @@ class SecureSignInFlowViewModel: ObservableObject {
     init() {
         // Authentication checks
         if let storedPin = KeychainHelper.read(forKey: "userPin") {
-            self.pin = storedPin
+//            self.pin = storedPin
             self.currentStep = .pinEntry
         } else {
             self.currentStep = .createPin

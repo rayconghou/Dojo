@@ -10,6 +10,7 @@ import SwiftUI
 import LocalAuthentication
 
 struct PINEntryView: View {
+    @ObservedObject var authManager = AuthManager.shared
     @ObservedObject var viewModel: SecureSignInFlowViewModel
     @State private var biometricAttempted = false
     
@@ -49,6 +50,7 @@ struct PINEntryView: View {
                         .foregroundColor(.white)
                 }
                 .modifier(ShakeEffect(animatableData: viewModel.pinError ? 1 : 0))
+                .frame(height: 190)
                 
                 Spacer().frame(height: 50)
                 

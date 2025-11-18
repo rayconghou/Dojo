@@ -67,8 +67,8 @@ struct CreatePINView: View {
         .padding()
         .statusBarHidden(true)
         .onAppear {
-            // Clear any existing PIN when entering this view
-            viewModel.clearPin()
+            // TEMP: Just went against this: "Clear any existing PIN when entering this view"
+//            viewModel.clearPin()
         }
     }
     }

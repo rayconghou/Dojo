@@ -3,16 +3,17 @@ import SwiftUI
 // MARK: - Sidebar with Extra Options
 
 struct SidebarView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
+    @Binding var hideHamburger: Bool
     @Binding var showSidebar: Bool
     @Binding var showDegenMode: Bool
     @Binding var selectedTab: Int
+    @Binding var search_text: String
     @State private var showManekiIntro = false
     @State private var showChatroom = false
     @State private var showMarketNews = false
     @State private var showSettings = false
     @State private var showNotifications = false
-    @State private var showProfileSettings = false
+//    @State private var showProfileSettings = false
     @State private var isDegenSplashActive = false
     @State private var hideSplashScreen = false
     @ObservedObject var userProfile: UserProfileViewModel
@@ -34,14 +35,36 @@ struct SidebarView: View {
                 }
                 
                 // Profile Row
-                Button(action: {
-                    showProfileSettings = true
-                }) {
+//                Button(action: {
+//                    showProfileSettings = true
+//                })
+                NavigationLink {
+                    ProfileView(
+                        hide_hamburger: $hideHamburger,
+                        hamburger_action: {},
+                        
+                        search_text: $search_text,
+                        userProfile: userProfile,
+                        feed: ProfileFeedModel(
+                            user_profile: userProfile,
+                            feed_key: userProfile.firebase_uid,
+                            other_user: nil),
+                        other_user: nil
+                    )
+                } label: {
                     HStack(spacing: 15) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .frame(width: 50, height: 50)
-                            .foregroundColor(.white)
+                        if let profilePic = userProfile.profilePic {
+                            Image(uiImage: profilePic)
+                                .resizable()
+                                .frame(width: 50, height: 50)
+                                .foregroundColor(.white)
+                                .clipShape(Circle())
+                        } else {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .frame(width: 50, height: 50)
+                                .foregroundColor(.white)
+                        }
                         VStack(alignment: .leading, spacing: 4) {
                 Text(userProfile.username)
                     .font(.custom("Satoshi-Bold", size: 24))
@@ -57,9 +80,14 @@ struct SidebarView: View {
                     }
                     .padding(.leading, 20)
                 }
-                .sheet(isPresented: $showProfileSettings) {
-                    ProfileSettingsView(userProfile: userProfile)
-                }
+//                .sheet(isPresented: $showProfileSettings) {
+////                    ProfileSettingsView(userProfile: userProfile)
+//                    ProfileView(
+//                        hideHamburger: $hideHamburger,
+//                        userProfile: userProfile,
+//                        other_user: nil
+//                    )
+//                }
                 
                 Divider()
                     .frame(height: 1)
@@ -169,7 +197,7 @@ struct SidebarView: View {
                 
                 // Logout
                 Button(action: {
-                    authViewModel.signOut()
+                    AuthManager.shared.signOut()
                 }) {
                     HStack {
                         Image(systemName: "power")
@@ -339,11 +367,17 @@ struct CommunityHubView: View {
 // MARK: - Preview
 
 struct SidebarView_Previews: PreviewProvider {
+    @State static var hideHamburger = false
+    @State static var search_text = ""
     static var previews: some View {
-        SidebarView(showSidebar: .constant(true),
-                    showDegenMode: .constant(false),
-                    selectedTab: .constant(0),
-                    userProfile: UserProfileViewModel(email: "jameswang@example.com", username: "James Wang"))
-            .preferredColorScheme(.dark)
+        NavigationStack {
+            SidebarView(hideHamburger: $hideHamburger,
+                        showSidebar: .constant(true),
+                        showDegenMode: .constant(false),
+                        selectedTab: .constant(0),
+                        search_text: $search_text,
+                        userProfile: UserProfileViewModel(firebase_uid: "0", email: "jameswang@example.com", username: "James Wang"))
+                .preferredColorScheme(.dark)
+        }
     }
 }

@@ -9,9 +9,13 @@ import SwiftUI
 import FirebaseCore
 import CoreText
 
+struct Constants {
+    static let typing_wait_time = 0.5
+}
+
 @main
 struct DojoApp: App {
-    @StateObject var authViewModel = AuthViewModel()
+    @ObservedObject var authManager: AuthManager
     
     init() {
         FirebaseApp.configure()
@@ -45,13 +49,24 @@ struct DojoApp: App {
     }
     var body: some Scene {
         WindowGroup {
-            if authViewModel.isLoggedIn {
+            if authManager.isLoggedIn {
                 ContentView()
-                    .environmentObject(authViewModel)
             } else {
                 AuthView()
-                    .environmentObject(authViewModel)
             }
+        }
+    }
+}
+
+// MARK: - Preview
+struct DojoApp_Previews: PreviewProvider {
+    static var previews: some View {
+        if AuthManager.shared.isLoggedIn {
+            ContentView()
+//            TEMP:
+                .preferredColorScheme(.dark)
+        } else {
+            AuthView()
         }
     }
 }

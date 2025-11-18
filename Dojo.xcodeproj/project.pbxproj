@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -36,7 +36,6 @@
 		C319FA612D930C1F0058C4B2 /* DegenHeaderBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA602D930C1F0058C4B2 /* DegenHeaderBar.swift */; };
 		C319FA632D99B7F50058C4B2 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA622D99B7F50058C4B2 /* AuthManager.swift */; };
 		C319FA652D99BC130058C4B2 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA642D99BC130058C4B2 /* AuthView.swift */; };
-		C319FA672D99C4D50058C4B2 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA662D99C4D50058C4B2 /* AuthViewModel.swift */; };
 		C319FA692D9B18390058C4B2 /* DegenTrendingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA682D9B18390058C4B2 /* DegenTrendingView.swift */; };
 		C319FA732D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA722D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift */; };
 		C319FA752D9B4B110058C4B2 /* DegenTrendingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA742D9B4B110058C4B2 /* DegenTrendingViewModel.swift */; };
@@ -60,7 +59,6 @@
 		C319FA9A2DA743270058C4B2 /* Tweets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FA992DA743270058C4B2 /* Tweets.swift */; };
 		C319FAA22DAD55BB0058C4B2 /* SecureSignInFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FAA12DAD55BB0058C4B2 /* SecureSignInFlowView.swift */; };
 		C319FAA42DAD64E70058C4B2 /* BiometricAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FAA32DAD64E70058C4B2 /* BiometricAuthManager.swift */; };
-		C319FAA62DAD65E70058C4B2 /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C319FAA52DAD65E70058C4B2 /* WebSocketManager.swift */; };
 		C38BADA12E85CD9500DF6FF2 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = C38BADA02E85CD9500DF6FF2 /* .gitignore */; };
 		C3ACF5672E8B80D600E7659F /* Korosu.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C3ACF5622E8B7C8C00E7659F /* Korosu.ttf */; };
 		C3EF602D2E87353900D18CB8 /* Satoshi-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C3EF602B2E87353900D18CB8 /* Satoshi-MediumItalic.ttf */; };
@@ -107,7 +105,6 @@
 		C319FA602D930C1F0058C4B2 /* DegenHeaderBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DegenHeaderBar.swift; sourceTree = "<group>"; };
 		C319FA622D99B7F50058C4B2 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
 		C319FA642D99BC130058C4B2 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
-		C319FA662D99C4D50058C4B2 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		C319FA682D9B18390058C4B2 /* DegenTrendingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DegenTrendingView.swift; sourceTree = "<group>"; };
 		C319FA722D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DexScreenerTokenProfile.swift; sourceTree = "<group>"; };
 		C319FA742D9B4B110058C4B2 /* DegenTrendingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DegenTrendingViewModel.swift; sourceTree = "<group>"; };
@@ -131,7 +128,6 @@
 		C319FA992DA743270058C4B2 /* Tweets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tweets.swift; sourceTree = "<group>"; };
 		C319FAA12DAD55BB0058C4B2 /* SecureSignInFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SecureSignInFlowView.swift; path = ../SecureSignInFlowView.swift; sourceTree = "<group>"; };
 		C319FAA32DAD64E70058C4B2 /* BiometricAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthManager.swift; sourceTree = "<group>"; };
-		C319FAA52DAD65E70058C4B2 /* WebSocketManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
 		C388F8912D72437D003FFCFF /* Dojo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dojo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C38BADA02E85CD9500DF6FF2 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		C3ACF5622E8B7C8C00E7659F /* Korosu.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Korosu.ttf; sourceTree = "<group>"; };
@@ -147,6 +143,11 @@
 		C3EF602C2E87353900D18CB8 /* Satoshi-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Satoshi-Regular.ttf"; sourceTree = "<group>"; };
 		C3EF60392E87356100D18CB8 /* The Last Shuriken.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "The Last Shuriken.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		06906C322EC26027003873E1 /* ProfileList */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ProfileList; sourceTree = "<group>"; };
+		0691D4F92EB468B100870818 /* Feed */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Feed; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		C388F88E2D72437D003FFCFF /* Frameworks */ = {
@@ -176,8 +177,10 @@
 		C319FA1F2D8113660058C4B2 /* API */ = {
 			isa = PBXGroup;
 			children = (
-				C319FAA52DAD65E70058C4B2 /* WebSocketManager.swift */,
+				0691D4FD2EB52F3400870818 /* PostsFetcher.swift */,
 				C319FA742D9B4B110058C4B2 /* DegenTrendingViewModel.swift */,
+				0647C0522E87711B0007DB2A /* WebSocketManager.swift */,
+				065496742E8C9259000B1010 /* test.rtf */,
 				C319FA722D9B4AE20058C4B2 /* DexScreenerTokenProfile.swift */,
 				C319FA4A2D837C2B0058C4B2 /* CryptoMarketFetcher.swift */,
 				C319FA452D836C5A0058C4B2 /* ApplePay.swift */,
@@ -209,6 +212,8 @@
 		C319FA252D8113B10058C4B2 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				06906C322EC26027003873E1 /* ProfileList */,
+				0691D4F92EB468B100870818 /* Feed */,
 				C319FA922DA611E20058C4B2 /* Sidebar */,
 				C319FA472D836D070058C4B2 /* SharedUI */,
 				C319FA3B2D8114530058C4B2 /* Spot */,
@@ -299,7 +304,6 @@
 			isa = PBXGroup;
 			children = (
 				C319FAA12DAD55BB0058C4B2 /* SecureSignInFlowView.swift */,
-				C319FA662D99C4D50058C4B2 /* AuthViewModel.swift */,
 				C319FA642D99BC130058C4B2 /* AuthView.swift */,
 				C319FA622D99B7F50058C4B2 /* AuthManager.swift */,
 			);
@@ -401,6 +405,10 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				06906C322EC26027003873E1 /* ProfileList */,
+				0691D4F92EB468B100870818 /* Feed */,
+			);
 			name = Dojo;
 			packageProductDependencies = (
 				C319FA552D8619240058C4B2 /* FirebaseAuth */,
@@ -499,7 +507,9 @@
 				C319FA792D9B54B20058C4B2 /* DegenTradeModels.swift in Sources */,
 				C319FAA42DAD64E70058C4B2 /* BiometricAuthManager.swift in Sources */,
 				C319FA652D99BC130058C4B2 /* AuthView.swift in Sources */,
+				0691D4FE2EB52F3700870818 /* PostsFetcher.swift in Sources */,
 				C319FA2D2D8113E40058C4B2 /* SidebarView.swift in Sources */,
+				0647C0532E87711B0007DB2A /* WebSocketManager.swift in Sources */,
 				C319FA372D8114210058C4B2 /* ManekiView.swift in Sources */,
 				C319FA982DA7395E0058C4B2 /* News.swift in Sources */,
 				C319FA1A2D8113080058C4B2 /* Chat.swift in Sources */,
@@ -522,12 +532,10 @@
 				C319FA9A2DA743270058C4B2 /* Tweets.swift in Sources */,
 				C319FA692D9B18390058C4B2 /* DegenTrendingView.swift in Sources */,
 				C319FA402D81145A0058C4B2 /* SellCryptoView.swift in Sources */,
-				C319FA672D99C4D50058C4B2 /* AuthViewModel.swift in Sources */,
 				C319FA632D99B7F50058C4B2 /* AuthManager.swift in Sources */,
 				C319FA3A2D8114420058C4B2 /* PortfolioView.swift in Sources */,
 				C319FA3B2D8114420058C4B2 /* NewsDetailModal.swift in Sources */,
 				C319FA442D836C2C0058C4B2 /* UserProfile.swift in Sources */,
-				C319FAA62DAD65E70058C4B2 /* WebSocketManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -659,10 +667,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Supporting/Preview Content\"";
-				DEVELOPMENT_TEAM = 2A887D7V9A;
+				DEVELOPMENT_TEAM = NPM7BA732W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "We use Face ID to securely authenticate you and protect your account.";
@@ -671,6 +680,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -678,6 +688,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = rayconghou.Dojo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -691,10 +702,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Supporting/Preview Content\"";
-				DEVELOPMENT_TEAM = 2A887D7V9A;
+				DEVELOPMENT_TEAM = NPM7BA732W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "We use Face ID to securely authenticate you and protect your account.";
@@ -703,6 +715,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -710,6 +723,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = rayconghou.Dojo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
