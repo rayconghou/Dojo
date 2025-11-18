@@ -8,6 +8,10 @@
 import SwiftUI
 import FirebaseCore
 
+struct Constants {
+    static let typing_wait_time = 0.5
+}
+
 @main
 struct DojoApp: App {
     @ObservedObject var authManager: AuthManager

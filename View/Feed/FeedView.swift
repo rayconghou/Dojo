@@ -9,12 +9,14 @@ import SwiftUI
 
 struct FeedView<T: PostsViewAbstractModel & PostsViewProtocol>: View {
     
-    @Binding var hideHamburger: Bool
-    var hamburgerAction: () -> Void
-    @State private var selectedPost: Post? = nil
+    @Binding var hide_hamburger: Bool
+    var hamburger_action: () -> Void
+    @Binding var search_text: String
     @State private var scrollOffset: CGFloat = 0
     @State private var showCreatePostModal = false
     @State private var searchText = ""
+    @State private var show_add_post_button = true
+    @State var show_search_bar: Bool = false
     @ObservedObject var userProfile: UserProfileViewModel
     @ObservedObject var postsViewModel: T
     
@@ -51,107 +53,85 @@ struct FeedView<T: PostsViewAbstractModel & PostsViewProtocol>: View {
     var body: some View {
         VStack(spacing: 0) {
             // Search Bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.gray)
-                
-                TextField("Search posts", text: $searchText)
-                    .foregroundColor(.white)
-                
-                if !searchText.isEmpty {
-                    Button(action: {
-                        searchText = ""
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
+            if show_search_bar {
+                // TEMP: need to incorporate search_text
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.gray)
+                    
+                    TextField("Search posts", text: $searchText)
+                        .foregroundColor(.white)
+                    
+                    if !searchText.isEmpty {
+                        Button(action: {
+                            searchText = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
+                .padding(.vertical, 10)
+                .padding(.horizontal)
+                .background(Color.clear)
+                .cornerRadius(10)
             }
-            .padding(.vertical, 10)
-            .padding(.horizontal)
-            .background(Color.clear)
-            .cornerRadius(10)
             
             // List of posts in a scrollable view
-            ZStack {
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        ForEach(posts) { post in
-//                            CryptoTrendCard(
-//                                rank: coin.market_cap_rank ?? 0,
-//                                name: coin.name,
-//                                symbol: coin.symbol,
-//                                imageUrl: coin.image,
-//                                price: coin.current_price,
-//                                change: coin.price_change_percentage_24h ?? 0,
-//                                sparkline: coin.sparkline_in_7d?.price.last24Hours ?? coin.sparkline_in_7d?.price ?? []
-//                            )
-                            if let userProfile = AuthManager.shared.userProfile, userProfile.firebase_uid == post.poster_uid {
-                                PostCard(post: post, username: userProfile.username, profilePic: userProfile.profilePic, likes_count: post.likes_count, we_liked_it: false, selectedPost: $selectedPost
-                                    )
-                            } else if let otherUser = FeedModel.otherUserHavingFeed.otherUsers.first(where: { $0.firebase_uid == post.poster_uid }) {
-                                if let profilePicData = otherUser.profilePic {
-                                    PostCard(post: post, username: otherUser.username, profilePic: UIImage(data: profilePicData), likes_count: post.likes_count, we_liked_it: post.we_liked_it, selectedPost: $selectedPost)
-                                } else {
-                                    PostCard(post: post, username: otherUser.username, profilePic: nil, likes_count: post.likes_count, we_liked_it: post.we_liked_it, selectedPost: $selectedPost)
-                                }
-                            } else {
-                                Text("LOADING")
-                            }
-                            
-                            // MAKE PostCard IN PostsFetcher?
-                        }
-                        if (!postsViewModel.noMorePosts) {
-                            LoadingView().onAppear(perform: {
-                                postsViewModel.fetchNewPosts()
-                            })
-                        }
-                    }
-                    .padding()
-                }
-                .refreshable {
-                    postsViewModel.refreshPosts()
-                }
-                
-//                TEMP: Make this into a "+" post button
-//                 Floating + (create post) button
-                VStack() {
-                    Spacer()
-                    
-                    HStack() {
-                        Spacer()
-                        
-                        Button(action: { showCreatePostModal = true }) {
-                            Text("+")
-                                .fontWeight(.semibold)
-                                .font(.system(size: 50))
-                                .foregroundColor(.white)
-                                .frame(width: 80, height: 80)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 30)
-                                        .fill(Color(hex: "0C0C0C")) // dark opaque
-                                        .shadow(color: Color.white.opacity(0.08), radius: 10, x: 0, y: 6)
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 30)
-                                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                                )
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    ForEach(posts) { post in
+                        //                            CryptoTrendCard(
+                        //                                rank: coin.market_cap_rank ?? 0,
+                        //                                name: coin.name,
+                        //                                symbol: coin.symbol,
+                        //                                imageUrl: coin.image,
+                        //                                price: coin.current_price,
+                        //                                change: coin.price_change_percentage_24h ?? 0,
+                        //                                sparkline: coin.sparkline_in_7d?.price.last24Hours ?? coin.sparkline_in_7d?.price ?? []
+                        //                            )
+                        if userProfile.firebase_uid == post.poster_uid {
+                            PostCard(
+                                post: post,
+                                userProfile: userProfile,
+                                other_user: nil,
+                                search_text: $search_text,
+                                likes_count: post.likes_count,
+                                we_liked_it: false,
+                                can_navigate_to_profile: !(postsViewModel is ProfileFeedModel),
+                                hide_hamburger: $hide_hamburger,
+                                hamburger_action: hamburger_action
+                            )
+                        } else if let other_user_having_feed = FeedModel.otherUserHavingFeed, let other_user = other_user_having_feed.otherUsers.first(where: { $0.firebase_uid == post.poster_uid }) {
+                            PostCard(
+                                post: post,
+                                userProfile: userProfile,
+                                other_user: other_user,
+                                search_text: $search_text,
+                                likes_count: post.likes_count,
+                                we_liked_it: post.we_liked_it,
+                                can_navigate_to_profile: !(postsViewModel is ProfileFeedModel),
+                                hide_hamburger: $hide_hamburger,
+                                hamburger_action: hamburger_action
+                            )
+                        } else {
+                            Text("LOADING")
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
-                    .sheet(isPresented: $showCreatePostModal) {
-                        CreatePostView(userProfile: userProfile)
+                    if (!postsViewModel.noMorePosts && posts.count >= postsViewModel.N) {
+                        LoadingView().onAppear(perform: {
+                            print("Fetching new posts...")
+                            postsViewModel.fetchNewPosts()
+                        })
                     }
                 }
+                .padding()
             }
-            .background(Color.black.edgesIgnoringSafeArea(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/))
+            .refreshable {
+                postsViewModel.refreshPosts()
+            }
         }
         .background(Color.black.edgesIgnoringSafeArea(.all))
-        .sheet(item: $selectedPost) { post in
-//            TEMP: Add post view
-//            CoinDetailModalView(coin: coin, marketVM: marketVM)
-        }
     }
 }
 
@@ -176,13 +156,26 @@ struct FeedView<T: PostsViewAbstractModel & PostsViewProtocol>: View {
 
 // Preview (make sure to bind hideHamburger to a constant for previewing)
 struct FeedView_Previews: PreviewProvider {
-    @State static var hideHamburger = false
+    @State static var hide_hamburger = false
+    @State static var user_profile = UserProfileViewModel(firebase_uid: "test_uid", email: "test@gmail.com", username: "test")
+    @State static var posts_view_model = Dojo.FeedModel(
+        user_profile: user_profile,
+        feed_key: "main"
+     )
+    @State static var search_text = ""
+    
     static var previews: some View {
-        FeedView(hideHamburger: $hideHamburger,
-                 hamburgerAction: {},
-                 userProfile: UserProfileViewModel(firebase_uid: "test_uid", email: "test@gmail.com", username: "test"),
-                 postsViewModel: FeedModel.otherUserHavingFeed
-        )
-        .preferredColorScheme(.dark)
+        NavigationStack {
+            FeedView(hide_hamburger: $hide_hamburger,
+                     hamburger_action: {},
+                     search_text: $search_text,
+                     userProfile: user_profile,
+                     postsViewModel: posts_view_model
+            )
+            .preferredColorScheme(.dark)
+        }
+        .onAppear(perform: {
+            FeedModel.otherUserHavingFeed = posts_view_model
+        })
     }
 }

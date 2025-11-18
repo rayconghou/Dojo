@@ -16,6 +16,7 @@ struct HomePageView: View {
     @State private var showDojo = false
     @State private var showLogo = false
     @State private var showBottomElements = false
+    @State private var search_text = ""
     @State private var showToolbar = true // New state for toolbar visibility
     @State private var userProfile: UserProfileViewModel
     @StateObject private var tradingWalletViewModel = TradingWalletViewModel()
@@ -45,29 +46,49 @@ struct HomePageView: View {
             ZStack {
                 TabView(selection: $selectedTab) {
                     if currentMode == .standard {
-//                        SpotView(hideHamburger: $hideHamburger, hamburgerAction: {
-//                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
-//                                showSidebar.toggle()
-//                            }
-//                        })
-                        FeedView(
-                            hideHamburger: $hideHamburger,
-                            hamburgerAction: {
-                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
-                                    showSidebar.toggle()
+                        //                        SpotView(hideHamburger: $hideHamburger, hamburgerAction: {
+                        //                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
+                        //                                showSidebar.toggle()
+                        //                            }
+                        //                        })
+                        ZStack {
+                            if AuthManager.shared.hasUserProfile {
+                                if let main_feed = FeedModel.feeds["main"] {
+                                    ZStack {
+                                        FeedView(
+                                            hide_hamburger: $hideHamburger,
+                                            hamburger_action: {
+                                                withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
+                                                    showSidebar.toggle()
+                                                }
+                                            },
+                                            search_text: $search_text,
+                                            show_search_bar: false,
+                                            userProfile: userProfile,
+                                            postsViewModel: main_feed
+                                        )
+                                        
+                                        //                 Floating + (create post) button
+                                        AddPostButton(
+                                            preceding_post_id: nil,
+                                            current_feed: main_feed,
+                                            user_profile: userProfile
+                                        )
+                                    }
                                 }
-                            },
-                            userProfile: userProfile,
-                            postsViewModel: FeedModel.feeds["main"]!
-                        )
+                            } else {
+                                Text("LOADING")
+                            }
+                        }
                         .tag(0)
                         .tabItem {
-                            Image(systemName: "binoculars.fill")
+                            Image(systemName: "house.fill")
+//                                Image(systemName: "binoculars.fill")
                         }
                         .scaleEffect(showSidebar ? 0.95 : 1.0)
                         .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
                         .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
+                        
                         IndexesView(hamburgerAction: {
                             withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
                                 showSidebar.toggle()
@@ -80,7 +101,7 @@ struct HomePageView: View {
                         .scaleEffect(showSidebar ? 0.95 : 1.0)
                         .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
                         .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
+                        
                         ManekiView(hamburgerAction: {
                             withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
                                 showSidebar.toggle()
@@ -106,60 +127,84 @@ struct HomePageView: View {
                         .scaleEffect(showSidebar ? 0.95 : 1.0)
                         .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
                         .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
-                        Color.clear
-                            .tag(degenEntryTabTag)
-                            .tabItem {
-                                Image(systemName: "flame.fill")
-                            }
-                    } else {
-                        DegenTrendingView()
-                            .tag(0)
-                            .tabItem {
-                                Image(systemName: "flame")
-                            }
-                            .scaleEffect(showSidebar ? 0.95 : 1.0)
-                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
-                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
-                        WalletSocialMediaTrackerView()
-                            .tag(1)
-                            .tabItem {
-                                Image(systemName: "wallet.pass")
-                            }
-                            .environmentObject(tradingWalletViewModel)
-                            .scaleEffect(showSidebar ? 0.95 : 1.0)
-                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
-                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
-                        DegenTradeView()
-                            .tag(2)
-                            .tabItem {
-                                Image(systemName: "arrow.triangle.2.circlepath")
-                            }
-                            .scaleEffect(showSidebar ? 0.95 : 1.0)
-                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
-                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
-                        PortfolioView(hamburgerAction: {
-                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
-                                showSidebar.toggle()
-                            }
-                        })
-                            .tag(3)
-                            .tabItem {
-                                Image(systemName: "briefcase")
-                            }
-                            .scaleEffect(showSidebar ? 0.95 : 1.0)
-                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
-                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
-
-                        Color.clear
-                            .tag(degenExitTabTag)
-                            .tabItem {
-                                Image(systemName: "rectangle.portrait.and.arrow.right")
-                            }
+                        
+                        ProfileListView(
+                            hide_hamburger: $hideHamburger,
+                            hamburger_action: {
+                                withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
+                                    showSidebar.toggle()
+                                }
+                            },
+                            search_text: $search_text,
+                            userProfile: userProfile,
+                            profilesViewModel: SearchedProfilesModel(
+                                user_profile: userProfile,
+                                feed_key: userProfile.firebase_uid,
+                                search_text: search_text
+                            )
+                        )
+                        .tag(4)
+                        .tabItem {
+                            Image(systemName: "person.fill")
+                        }
+                        .scaleEffect(showSidebar ? 0.95 : 1.0)
+                        .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+                        .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+                        
+//                        Color.clear
+//                            .tag(degenEntryTabTag)
+//                            .tabItem {
+//                                Image(systemName: "flame.fill")
+//                            }
                     }
+//                    } else {
+//                        DegenTrendingView()
+//                            .tag(0)
+//                            .tabItem {
+//                                Image(systemName: "flame")
+//                            }
+//                            .scaleEffect(showSidebar ? 0.95 : 1.0)
+//                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+//                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+//
+//                        WalletSocialMediaTrackerView()
+//                            .tag(1)
+//                            .tabItem {
+//                                Image(systemName: "wallet.pass")
+//                            }
+//                            .environmentObject(tradingWalletViewModel)
+//                            .scaleEffect(showSidebar ? 0.95 : 1.0)
+//                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+//                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+//
+//                        DegenTradeView()
+//                            .tag(2)
+//                            .tabItem {
+//                                Image(systemName: "arrow.triangle.2.circlepath")
+//                            }
+//                            .scaleEffect(showSidebar ? 0.95 : 1.0)
+//                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+//                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+//
+//                        PortfolioView(hamburgerAction: {
+//                            withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0)) {
+//                                showSidebar.toggle()
+//                            }
+//                        })
+//                            .tag(3)
+//                            .tabItem {
+//                                Image(systemName: "briefcase")
+//                            }
+//                            .scaleEffect(showSidebar ? 0.95 : 1.0)
+//                            .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
+//                            .animation(.interpolatingSpring(mass: 1.0, stiffness: 200, damping: 25, initialVelocity: 0), value: showSidebar)
+//
+//                        Color.clear
+//                            .tag(degenExitTabTag)
+//                            .tabItem {
+//                                Image(systemName: "rectangle.portrait.and.arrow.right")
+//                            }
+//                    }
                 }
                 .scaleEffect(showSidebar ? 0.95 : 1.0)
                 .offset(x: showSidebar ? UIScreen.main.bounds.width * 0.1 : 0)
@@ -193,9 +238,11 @@ struct HomePageView: View {
                 
                 // Existing Sidebar View
                 SidebarView(
+                    hideHamburger: $hideHamburger,
                     showSidebar: $showSidebar,
                     showDegenMode: $showDegenMode,
                     selectedTab: $selectedTab,
+                    search_text: $search_text,
                     userProfile: userProfile
                 )
                 .frame(width: UIScreen.main.bounds.width)
@@ -210,67 +257,67 @@ struct HomePageView: View {
                         .transition(.opacity)
                 }
                 
-                // Entry Warning Popup (New)
-                if showDegenEntryWarning {
-                    DegenEntryWarningView(
-                        isPresented: $showDegenEntryWarning,
-                        onAccept: {
-                            showDegenEntryWarning = false
-                            
-                            // Close sidebar silently in the background if open
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                showSidebar = false
-                            }
-                            
-                            // Activate degen splash animation and mode change
-                            activateDegenSplash()
-                        }
-                    )
-                    .transition(.scale(scale: 0.9).combined(with: .opacity))
-                    .zIndex(999)
-                }
+//                // Entry Warning Popup (New)
+//                if showDegenEntryWarning {
+//                    DegenEntryWarningView(
+//                        isPresented: $showDegenEntryWarning,
+//                        onAccept: {
+//                            showDegenEntryWarning = false
+//                            
+//                            // Close sidebar silently in the background if open
+//                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+//                                showSidebar = false
+//                            }
+//                            
+//                            // Activate degen splash animation and mode change
+//                            activateDegenSplash()
+//                        }
+//                    )
+//                    .transition(.scale(scale: 0.9).combined(with: .opacity))
+//                    .zIndex(999)
+//                }
                 
-                // Exit Confirmation Popup (Updated)
-                if showDegenExitConfirmation {
-                    DegenExitConfirmationView(
-                        isPresented: $showDegenExitConfirmation,
-                        onConfirm: {
-                            showDegenExitConfirmation = false
-                            
-                            // Prepare for exit before showing the splash
-                            selectedTab = 0
-                            
-                            // Activate exit splash first
-                            activateExitSplash()
-                            
-                            // Close sidebar silently in the background
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                showSidebar = false
-                            }
-                            
-                            currentMode = .standard
-                            showDegenMode = false
-                        }
-                    )
-                    .transition(.scale(scale: 0.9).combined(with: .opacity))
-                    .zIndex(999)
-                }
-                
-                // Degen Mode Splash Screen
-                if isDegenSplashActive {
-                    DegenSplashScreen()
-                        .offset(y: hideSplashScreen ? -UIScreen.main.bounds.height : 0)
-                        .animation(.easeInOut(duration: 1.5).delay(0.75), value: hideSplashScreen)
-                        .ignoresSafeArea()
-                }
-                
-                // Exit Splash Screen (using original splash screen logic)
-                if isExitingSplashActive {
-                    exitSplashScreen
-                        .offset(y: hideSplashScreen ? -UIScreen.main.bounds.height : 0)
-                        .animation(.easeInOut(duration: 1.5).delay(0.75), value: hideSplashScreen)
-                        .ignoresSafeArea()
-                }
+//                // Exit Confirmation Popup (Updated)
+//                if showDegenExitConfirmation {
+//                    DegenExitConfirmationView(
+//                        isPresented: $showDegenExitConfirmation,
+//                        onConfirm: {
+//                            showDegenExitConfirmation = false
+//                            
+//                            // Prepare for exit before showing the splash
+//                            selectedTab = 0
+//                            
+//                            // Activate exit splash first
+//                            activateExitSplash()
+//                            
+//                            // Close sidebar silently in the background
+//                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+//                                showSidebar = false
+//                            }
+//                            
+//                            currentMode = .standard
+//                            showDegenMode = false
+//                        }
+//                    )
+//                    .transition(.scale(scale: 0.9).combined(with: .opacity))
+//                    .zIndex(999)
+//                }
+//                
+//                // Degen Mode Splash Screen
+//                if isDegenSplashActive {
+//                    DegenSplashScreen()
+//                        .offset(y: hideSplashScreen ? -UIScreen.main.bounds.height : 0)
+//                        .animation(.easeInOut(duration: 1.5).delay(0.75), value: hideSplashScreen)
+//                        .ignoresSafeArea()
+//                }
+//                
+//                // Exit Splash Screen (using original splash screen logic)
+//                if isExitingSplashActive {
+//                    exitSplashScreen
+//                        .offset(y: hideSplashScreen ? -UIScreen.main.bounds.height : 0)
+//                        .animation(.easeInOut(duration: 1.5).delay(0.75), value: hideSplashScreen)
+//                        .ignoresSafeArea()
+//                }
             }
             .preferredColorScheme(.dark)
             .onChange(of: showSidebar) { oldValue, newValue in
@@ -278,25 +325,25 @@ struct HomePageView: View {
                     hideHamburger = newValue
                 }
             }
-            .onChange(of: showDegenMode) { oldValue, newValue in
-                if newValue && currentMode == .standard {
-                    // Instead of immediately activating, show the warning first
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        showDegenEntryWarning = true
-                    }
-                }
-            }
-            .onChange(of: selectedTab) { oldValue, newValue in
-                if currentMode == .degen && newValue == degenExitTabTag {
-                    selectedTab = oldValue
-                    requestExitDegenMode()
-                } else if currentMode == .standard && newValue == degenEntryTabTag {
-                    selectedTab = oldValue
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        showDegenEntryWarning = true
-                    }
-                }
-            }
+//            .onChange(of: showDegenMode) { oldValue, newValue in
+//                if newValue && currentMode == .standard {
+//                    // Instead of immediately activating, show the warning first
+//                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+//                        showDegenEntryWarning = true
+//                    }
+//                }
+//            }
+//            .onChange(of: selectedTab) { oldValue, newValue in
+//                if currentMode == .degen && newValue == degenExitTabTag {
+//                    selectedTab = oldValue
+//                    requestExitDegenMode()
+//                } else if currentMode == .standard && newValue == degenEntryTabTag {
+//                    selectedTab = oldValue
+//                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+//                        showDegenEntryWarning = true
+//                    }
+//                }
+//            }
         }
     }
     
