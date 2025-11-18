@@ -54,780 +54,837 @@ struct PriceHistoryEntry: Identifiable {
     let price: Double
 }
 
+
 struct CoinDetailModalView: View {
     let coin: Coin
     @ObservedObject var marketVM: CryptoMarketViewModel
-    @State private var selectedTab = 0
+    @State private var selectedTimeframe = 0
+    @State private var showBuyScreen = false
     @Environment(\.dismiss) private var dismiss
     
-    // Hard-coded Bitcoin data for demo
-    let bitcoinDescription = "Bitcoin is the first decentralized cryptocurrency, released as open-source software in 2009. It operates on a peer-to-peer network without central authority or banks. Transaction verification and network integrity are maintained by cryptography and recorded in a public distributed ledger called a blockchain."
+    let timeframes = ["1D", "1W", "1M", "1Y", "All"]
+    
+    let priceHistory = [
+        PriceHistoryEntry(date: "Apr 09", price: 117176.16),
+        PriceHistoryEntry(date: "Apr 08", price: 118611.15),
+        PriceHistoryEntry(date: "Apr 07", price: 114497.52),
+        PriceHistoryEntry(date: "Apr 06", price: 112927.92),
+        PriceHistoryEntry(date: "Apr 05", price: 109876.54),
+        PriceHistoryEntry(date: "Apr 04", price: 111234.56)
+    ]
     
     let marketStats = [
         ("Market Cap", "$1.2T"),
         ("24h Volume", "$48.2B"),
         ("Circulating Supply", "19.4M BTC"),
         ("Max Supply", "21M BTC"),
-        ("All-Time High", "$69,000")
-    ]
-    
-    // Mock price history data points
-    let priceHistory: [PriceHistoryEntry] = [
-        .init(date: "Apr 09", price: 71243.0),
-        .init(date: "Apr 08", price: 70129.0),
-        .init(date: "Apr 07", price: 68926.0),
-        .init(date: "Apr 06", price: 67892.0),
-        .init(date: "Apr 05", price: 69123.0),
-        .init(date: "Apr 04", price: 68421.0),
-        .init(date: "Apr 03", price: 66789.0)
+        ("All-Time High", "$119,176.16"),
+        ("Popularity", "#1 Most held")
     ]
     
     var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black, Color(hex: "121212")]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // Background - same as other screens
+            Color(hex: "050715")
+                .ignoresSafeArea(.all)
             
             ScrollView {
-                VStack(spacing: 0) {
-                    // Header with coin info and chart
+                VStack(spacing: 24) {
+                    // Header with back button, coin info, and favorite
                     headerSection
+                        .padding(.top, 20)
                     
-                    // Tab selection
-                    tabSelectionView
+                    // Price section
+                    priceSection
                     
-                    // Tab content
-                    tabContentView
+                    // Chart section
+                    chartSection
+                    
+                    // Timeframe selector
+                    timeframeSelector
+                    
+                    // Price History section
+                    priceHistorySection
+                    
+                    // Market Stats section
+                    marketStatsSection
+                    
+                    // About section
+                    aboutSection
+                    
+                    // Resources section
+                    resourcesSection
+                    
+                    // Footer
+                    footerSection
                 }
+                .padding(.bottom, 80) // Space for bottom buttons
             }
             
-            // Floating action button
+            // Bottom action buttons - positioned at very bottom of screen
             VStack {
                 Spacer()
-                buyButton
+                HStack(spacing: 12) {
+                    // Buy Button with blue gradient
+                    Button(action: {
+                        showBuyScreen = true
+                    }) {
+                        Text("Buy")
+                            .font(.custom("Satoshi-Black", size: 18))
+                            .foregroundColor(.white)
+                            .frame(height: 56)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color(red: 0.2, green: 0.5, blue: 1.0),      // Bright blue
+                                        Color(red: 0.1, green: 0.3, blue: 0.8)       // Darker blue
+                                    ]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .cornerRadius(28)
+                    }
+                    
+                    // Sell Button with white background and black text
+                    Button(action: {}) {
+                        Text("Sell")
+                            .font(.custom("Satoshi-Black", size: 18))
+                            .foregroundColor(.black)
+                            .frame(height: 56)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.white)
+                            .cornerRadius(28)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 0) // No bottom padding since there's no tab bar in modal
             }
-            .padding(.bottom, 16)
         }
-        .navigationBarItems(leading: dismissButton)
         .onAppear {
             marketVM.fetchCoinDetail(id: coin.id)
+        }
+        .fullScreenCover(isPresented: $showBuyScreen) {
+            BuyScreenView(coin: coin, asset: nil)
         }
     }
     
     // MARK: - UI Components
     
-    private var dismissButton: some View {
-        Button(action: {
-            dismiss()
-        }) {
-            Image(systemName: "xmark")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .padding(8)
-                .background(Color.gray.opacity(0.3))
-                .clipShape(Circle())
-        }
-    }
-    
     private var headerSection: some View {
-        VStack(spacing: 16) {
-            HStack(alignment: .center) {
-                // Coin icon
+        HStack {
+            // Coin icon and name
+            HStack(spacing: 12) {
+                // Coin icon with background color
                 AsyncImage(url: URL(string: coin.image)) { image in
                     image
                         .resizable()
-                        .frame(width: 48, height: 48)
-                        .clipShape(Circle())
+                        .scaledToFit()
+                        .frame(width: 32, height: 32)
                 } placeholder: {
-                    Circle()
+                    RoundedRectangle(cornerRadius: 8)
                         .fill(Color.gray.opacity(0.3))
-                        .frame(width: 48, height: 48)
+                        .frame(width: 32, height: 32)
                 }
+                .frame(width: 40, height: 40)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(backgroundColorForSymbol(coin.symbol))
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(coin.name)
-                        .font(.title2)
-                        .fontWeight(.bold)
+                        .font(.custom("Satoshi-Black", size: 20))
                         .foregroundColor(.white)
                     
                     Text(coin.symbol.uppercased())
-                        .font(.subheadline)
+                        .font(.custom("Satoshi-Black", size: 16))
                         .foregroundColor(.gray)
+                }
                 }
                 
                 Spacer()
                 
-                // Watchlist button
-                Button(action: {}) {
-                    Image(systemName: "star")
-                        .font(.system(size: 20))
-                        .foregroundColor(.gray)
-                }
+            // Down arrow button for dismissing modal
+                Button(action: {
+                dismiss()
+            }) {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
             }
-            .padding(.horizontal)
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    private var priceSection: some View {
+        let percentageChange = coin.price_change_percentage_24h ?? 0
+        let dollarChange = coin.current_price * (percentageChange / 100)
+        let priceChangeText = dollarChange >= 0 ? "+$\(String(format: "%.2f", abs(dollarChange)))" : "-$\(String(format: "%.2f", abs(dollarChange)))"
+        
+        return VStack(alignment: .leading, spacing: 8) {
+            // Current price
+            Text(coin.current_price.asFormattedCurrency)
+                .font(.custom("Satoshi-Black", size: 32))
+                                .foregroundColor(.white)
             
-            // Price section
-            VStack(alignment: .leading, spacing: 8) {
-                Text("$\(coin.current_price, specifier: "%.2f")")
-                    .font(.system(size: 32, weight: .bold))
+            // Price change row
+            HStack(spacing: 8) {
+                // Dollar change
+                Text(priceChangeText)
+                    .font(.custom("Satoshi-Black", size: 16))
                     .foregroundColor(.white)
                 
+                // Percentage change with triangle
                 HStack(spacing: 4) {
-                    Image(systemName: coin.price_change_percentage_24h ?? 0 >= 0 ? "arrow.up.right" : "arrow.down.right")
-                        .font(.caption)
-                        .foregroundColor(coin.price_change_percentage_24h ?? 0 >= 0 ? .green : .red)
+                    Image(systemName: "triangle.fill")
+                        .font(.system(size: 8))
+                        .foregroundColor(percentageChange >= 0 ? .green : .red)
+                        .rotationEffect(.degrees(percentageChange >= 0 ? 0 : 180))
                     
-                    Text("\(coin.price_change_percentage_24h ?? 0, specifier: "%.2f")% (24h)")
-                        .font(.subheadline)
-                        .foregroundColor(coin.price_change_percentage_24h ?? 0 >= 0 ? .green : .red)
+                    Text(String(format: "%.2f%%", abs(percentageChange)))
+                        .font(.custom("Satoshi-Black", size: 16))
+                        .foregroundColor(percentageChange >= 0 ? .green : .red)
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal)
-            
-            // Price chart
-            ZStack {
-                // Sparkline chart visualization
-                if let sparklineData = coin.sparkline_in_7d?.price, !sparklineData.isEmpty {
-                    MockSparklineChartView(dataPoints: sparklineData, lineColor: coin.price_change_percentage_24h ?? 0 >= 0 ? .green : .red)
-                        .frame(height: 200)
-                } else {
-                    // Fallback chart for demo purposes
-                    MockChartView(isPositive: coin.price_change_percentage_24h ?? 0 >= 0)
-                        .frame(height: 200)
-                }
-            }
-            .padding(.top, 8)
-            
-            // Time period selection
-            HStack(spacing: 16) {
-                ForEach(["1H", "1D", "1W", "1M", "1Y", "All"], id: \.self) { period in
-                    Button(action: {}) {
-                        Text(period)
-                            .font(.system(size: 14, weight: period == "1W" ? .bold : .regular))
-                            .foregroundColor(period == "1W" ? .white : .gray)
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 12)
-                            .background(period == "1W" ? Color.blue.opacity(0.2) : Color.clear)
-                            .cornerRadius(8)
-                    }
-                }
-            }
-            .padding(.top, 8)
-        }
-        .padding(.top, 16)
-        .padding(.bottom, 24)
-    }
-    
-    private var tabSelectionView: some View {
-        HStack(spacing: 0) {
-            ForEach(["Overview", "News", "Stats", "About"], id: \.self) { tab in
-                let index = ["Overview", "News", "Stats", "About"].firstIndex(of: tab) ?? 0
                 
+                Text("Today")
+                    .font(.custom("Satoshi-Black", size: 14))
+                    .foregroundColor(.gray)
+                
+                Spacer()
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    private var chartSection: some View {
+        Group {
+            // Chart with sparkline - exactly like CryptoTrendCard
+            if let sparklineData = coin.sparkline_in_7d?.price, !sparklineData.isEmpty {
+                SparklineChartView(data: sparklineData, isPositive: coin.price_change_percentage_24h ?? 0 >= 0)
+                    .frame(height: 200)
+                    .onAppear {
+                        print("🔍 Sparkline data for \(coin.symbol): \(sparklineData.prefix(10))... (total: \(sparklineData.count) points)")
+                        if let min = sparklineData.min(), let max = sparklineData.max() {
+                            print("📊 Price range: \(min) to \(max)")
+                        }
+                    }
+            } else {
+                // Fallback chart
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: "141628"))
+                    .frame(height: 200)
+                    .overlay(
+                        Text("Chart data unavailable")
+                            .font(.custom("Satoshi-Black", size: 14))
+                            .foregroundColor(.gray)
+                    )
+            }
+        }
+    }
+    
+    private var timeframeSelector: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(timeframes.enumerated()), id: \.offset) { index, timeframe in
                 Button(action: {
-                    withAnimation {
-                        selectedTab = index
-                    }
+                    // TODO: Implement actual price tracking for different timeframes
+                    // This should fetch and display price data for the selected timeframe
+                    selectedTimeframe = index
+                    print("Selected timeframe: \(timeframe)")
                 }) {
-                    VStack(spacing: 8) {
-                        Text(tab)
-                            .font(.system(size: 16, weight: selectedTab == index ? .semibold : .regular))
-                            .foregroundColor(selectedTab == index ? .white : .gray)
-                        
-                        Rectangle()
-                            .fill(selectedTab == index ? Color.blue : Color.clear)
-                            .frame(height: 3)
-                    }
-                    .frame(maxWidth: .infinity)
+                    Text(timeframe)
+                        .font(.custom("Satoshi-Black", size: 16))
+                        .foregroundColor(selectedTimeframe == index ? .white : .gray)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 16)
+                        .background(
+                            selectedTimeframe == index ?
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color(red: 0.2, green: 0.5, blue: 1.0),      // Bright blue
+                                    Color(red: 0.1, green: 0.3, blue: 0.8)       // Darker blue
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ) : LinearGradient(
+                                gradient: Gradient(colors: [Color(hex: "141628")]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .cornerRadius(8)
                 }
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 20)
     }
     
-    private var tabContentView: some View {
-        VStack {
-            switch selectedTab {
-            case 0:
-                overviewTab
-            case 1:
-                newsTab
-            case 2:
-                statsTab
-            case 3:
-                aboutTab
-            default:
-                overviewTab
-            }
-        }
-        .padding(.top, 16)
-        .padding(.bottom, 80) // Space for the bottom button
-    }
     
-    private var overviewTab: some View {
-        VStack(spacing: 24) {
-            // Price history
+    private var priceHistorySection: some View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Price History")
-                    .font(.headline)
+                .font(.custom("Satoshi-Black", size: 20))
                     .foregroundColor(.white)
+                .padding(.horizontal, 20)
                 
-                VStack(spacing: 16) {
+            VStack(spacing: 0) {
                     ForEach(priceHistory) { entry in
                         HStack {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text(entry.date)
-                                .font(.subheadline)
+                                .font(.custom("Satoshi-Black", size: 16))
+                                .foregroundColor(.white)
+                            
+                            Text("1 \(coin.symbol.uppercased())")
+                                .font(.custom("Satoshi-Black", size: 14))
                                 .foregroundColor(.gray)
+                        }
                             
                             Spacer()
                             
-                            Text("$\(entry.price, specifier: "%.2f")")
-                                .font(.subheadline)
+                        Text(entry.price.asFormattedCurrency)
+                            .font(.custom("Satoshi-Black", size: 16))
                                 .foregroundColor(.white)
                         }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    
+                    if entry.id != priceHistory.last?.id {
                         Divider()
                             .background(Color.gray.opacity(0.3))
+                            .padding(.horizontal, 20)
                     }
                 }
-            }
-            .padding(.horizontal)
-            
-            // Market stats highlights
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Market Stats")
-                    .font(.headline)
-                    .foregroundColor(.white)
                 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(marketStats.prefix(4), id: \.0) { stat in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(stat.0)
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            
-                            Text(stat.1)
-                                .font(.subheadline)
-                                .foregroundColor(.white)
-                        }
+                HStack {
+                    Spacer()
+                    Button(action: {}) {
+                        Text("See Last 30 Days >")
+                            .font(.custom("Satoshi-Black", size: 16))
+                            .foregroundColor(Color(hex: "5987FF"))
                     }
+                    Spacer()
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 16)
             }
-            .padding(.horizontal)
-            
-            // Description preview
-            VStack(alignment: .leading, spacing: 8) {
-                Text("About")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                Text(bitcoinDescription.prefix(150) + "...")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .lineLimit(3)
-                
-                Button(action: {
-                    selectedTab = 3 // Switch to About tab
-                }) {
-                    Text("Read more")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                }
-                .padding(.top, 4)
-            }
-            .padding(.horizontal)
+            .background(Color(hex: "141628"))
+            .cornerRadius(12)
+            .padding(.horizontal, 20)
         }
     }
     
-    private var newsTab: some View {
-        VStack(spacing: 16) {
-            ForEach(1...5, id: \.self) { _ in
-                newsCard
-            }
-        }
-        .padding(.horizontal)
-    }
-    
-    private var newsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("CryptoNews")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                
-                Spacer()
-                
-                Text("2h ago")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            
-            Text("Bitcoin Surges Past $70,000 as Institutional Demand Continues to Rise")
-                .font(.headline)
+    private var marketStatsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Market Stats")
+                .font(.custom("Satoshi-Black", size: 20))
                 .foregroundColor(.white)
-                .lineLimit(2)
+                .padding(.horizontal, 20)
             
-            Text("Bitcoin has reached new highs as more companies add the cryptocurrency to their balance sheets, signaling growing mainstream adoption...")
-                .font(.subheadline)
-                .foregroundColor(.gray)
-                .lineLimit(2)
-        }
-        .padding(16)
-        .background(Color(hex: "1A1A1A"))
-        .cornerRadius(12)
-    }
-    
-    private var statsTab: some View {
-        VStack(spacing: 24) {
-            // Market stats
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Market Stats")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                ForEach(marketStats, id: \.0) { stat in
-                    HStack {
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 8) {
+                ForEach(Array(marketStats.enumerated()), id: \.offset) { index, stat in
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(stat.0)
-                            .font(.subheadline)
+                            .font(.custom("Satoshi-Black", size: 12))
                             .foregroundColor(.gray)
-                        
-                        Spacer()
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
                         
                         Text(stat.1)
-                            .font(.subheadline)
+                            .font(.custom("Satoshi-Black", size: 16))
                             .foregroundColor(.white)
+                            .lineLimit(3)
+                            .multilineTextAlignment(.leading)
                     }
-                    Divider()
-                        .background(Color.gray.opacity(0.3))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(height: 70)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
+                    .background(Color(hex: "141628"))
+                    .cornerRadius(15)
                 }
             }
-            .padding(.horizontal)
-            
-            // Trading activity
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Trading Activity")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("52w Low")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
-                        Text("$24,800")
-                            .font(.subheadline)
-                            .foregroundColor(.white)
-                    }
-                    
-                    Spacer()
-                    
-                    // Price range indicator
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 4)
-                        
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.blue)
-                            .frame(width: 200 * 0.85, height: 4) // 85% of the way from low to high
-                        
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 12, height: 12)
-                            .offset(x: 200 * 0.85 - 6) // Center the circle on the indicator
-                    }
-                    .frame(width: 200)
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("52w High")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
-                        Text("$73,750")
-                            .font(.subheadline)
-                            .foregroundColor(.white)
-                    }
-                }
-                
-                // Volume
-                HStack {
-                    Text("Volume (24h)")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                    
-                    Spacer()
-                    
-                    Text("$48.2B")
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                }
-                Divider()
-                    .background(Color.gray.opacity(0.3))
-                
-                // Popularity
-                HStack {
-                    Text("Popularity")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                    
-                    Spacer()
-                    
-                    Text("#1 Most held")
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                }
-                Divider()
-                    .background(Color.gray.opacity(0.3))
-            }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
         }
     }
     
-    private var aboutTab: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            // Description
-            VStack(alignment: .leading, spacing: 12) {
-                Text("About \(coin.name)")
-                    .font(.headline)
+    private var aboutSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("About")
+                .font(.custom("Satoshi-Black", size: 20))
                     .foregroundColor(.white)
-                
-                Text(bitcoinDescription)
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.horizontal)
+                .padding(.horizontal, 20)
             
-            // Resources
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Resources")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                VStack(spacing: 16) {
-                    resourceLink(title: "Official Website", icon: "safari", url: "https://bitcoin.org")
-                    resourceLink(title: "White Paper", icon: "doc.text", url: "https://bitcoin.org/bitcoin.pdf")
-                    resourceLink(title: "Block Explorer", icon: "magnifyingglass", url: "https://blockstream.info")
-                    resourceLink(title: "Source Code", icon: "chevron.left.slash.chevron.right", url: "https://github.com/bitcoin/bitcoin")
-                }
-            }
-            .padding(.horizontal)
-            
-            // Team
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Team")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                Text("Bitcoin was created by an anonymous person or group known as Satoshi Nakamoto in 2009.")
-                    .font(.subheadline)
+            Text("Bitcoin is the first decentralized cryptocurrency, released as open-source software in 2009. It operates on a peer-to-peer network without central authority or banks. Transaction verification and network integrity are maintained by cryptography and recorded in a public distributed ledger called a blockchain.")
+                .font(.custom("Satoshi-Black", size: 16))
                     .foregroundColor(.gray)
-            }
-            .padding(.horizontal)
+                .lineSpacing(4)
+                .padding(20)
+                .background(Color(hex: "141628"))
+                .cornerRadius(12)
+                .padding(.horizontal, 20)
         }
     }
     
-    private func resourceLink(title: String, icon: String, url: String) -> some View {
+    private var resourcesSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Resources")
+                .font(.custom("Satoshi-Black", size: 20))
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+            
+            VStack(spacing: 12) {
+                ForEach([
+                    ("globe", "Official Website"),
+                    ("doc.text", "White Paper"),
+                    ("magnifyingglass", "Block Explorer"),
+                    ("chevron.left.forwardslash.chevron.right", "Source Code")
+                ], id: \.1) { icon, title in
+                    Button(action: {}) {
         HStack {
             Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(.blue)
-                .frame(width: 24, height: 24)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.white)
+                                .frame(width: 24)
             
             Text(title)
-                .font(.subheadline)
+                                .font(.custom("Satoshi-Black", size: 16))
                 .foregroundColor(.white)
             
             Spacer()
             
             Image(systemName: "chevron.right")
-                .font(.system(size: 14))
+                                .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.gray)
         }
-        .padding(12)
-        .background(Color(hex: "1A1A1A"))
-        .cornerRadius(8)
-    }
-    
-    private var buyButton: some View {
-        Button(action: {}) {
-            Text("Buy Bitcoin")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(height: 56)
-                .frame(maxWidth: .infinity)
-                .background(Color.blue)
-                .cornerRadius(28)
-                .padding(.horizontal, 24)
-                .shadow(color: Color.blue.opacity(0.4), radius: 10, x: 0, y: 4)
-        }
-    }
-}
-
-// MARK: - Supporting Views
-
-struct MockSparklineChartView: View {
-    let dataPoints: [Double]
-    let lineColor: Color
-    
-    var body: some View {
-        GeometryReader { geometry in
-            Path { path in
-                let width = geometry.size.width
-                let height = geometry.size.height
-                
-                // Find min and max for scaling
-                guard let min = dataPoints.min(),
-                      let max = dataPoints.max(),
-                      min != max else {
-                    return
-                }
-                
-                let stepX = width / CGFloat(dataPoints.count - 1)
-                let stepY = height / CGFloat(max - min)
-                
-                var points: [CGPoint] = []
-                
-                for (index, point) in dataPoints.enumerated() {
-                    let x = CGFloat(index) * stepX
-                    let y = height - CGFloat(point - min) * stepY
-                    points.append(CGPoint(x: x, y: y))
-                }
-                
-                // Start from the first point
-                if let firstPoint = points.first {
-                    path.move(to: firstPoint)
-                }
-                
-                // Draw lines to all other points
-                for point in points.dropFirst() {
-                    path.addLine(to: point)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                        .background(Color(hex: "141628"))
+                        .cornerRadius(12)
+                    }
                 }
             }
-            .stroke(lineColor, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-            
-            // Add gradient fill
-            LinearGradient(
-                gradient: Gradient(colors: [lineColor.opacity(0.3), lineColor.opacity(0.01)]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .mask(
-                Path { path in
-                    let width = geometry.size.width
-                    let height = geometry.size.height
-                    
-                    guard let min = dataPoints.min(),
-                          let max = dataPoints.max(),
-                          min != max else {
-                        return
-                    }
-                    
-                    let stepX = width / CGFloat(dataPoints.count - 1)
-                    let stepY = height / CGFloat(max - min)
-                    
-                    var points: [CGPoint] = []
-                    
-                    for (index, point) in dataPoints.enumerated() {
-                        let x = CGFloat(index) * stepX
-                        let y = height - CGFloat(point - min) * stepY
-                        points.append(CGPoint(x: x, y: y))
-                    }
-                    
-                    // Start from the first point
-                    if let firstPoint = points.first {
-                        path.move(to: CGPoint(x: firstPoint.x, y: height))
-                        path.addLine(to: firstPoint)
-                    }
-                    
-                    // Draw lines to all other points
-                    for point in points.dropFirst() {
-                        path.addLine(to: point)
-                    }
-                    
-                    // Close the path
-                    if let lastPoint = points.last {
-                        path.addLine(to: CGPoint(x: lastPoint.x, y: height))
-                        path.closeSubpath()
-                    }
-                }
-            )
+            .padding(.horizontal, 20)
         }
     }
-}
-
-struct MockChartView: View {
-    let isPositive: Bool
     
-    var body: some View {
-        GeometryReader { geometry in
-            let width = geometry.size.width
-            let height = geometry.size.height
-            
-            Path { path in
-                // Start at the left edge
-                path.move(to: CGPoint(x: 0, y: height * 0.5))
-                
-                // First curve up
-                path.addCurve(
-                    to: CGPoint(x: width * 0.25, y: height * 0.4),
-                    control1: CGPoint(x: width * 0.1, y: height * 0.5),
-                    control2: CGPoint(x: width * 0.2, y: height * 0.3)
-                )
-                
-                // Second curve down
-                path.addCurve(
-                    to: CGPoint(x: width * 0.5, y: height * 0.6),
-                    control1: CGPoint(x: width * 0.3, y: height * 0.5),
-                    control2: CGPoint(x: width * 0.4, y: height * 0.7)
-                )
-                
-                // Final curve up or down based on price change
-                if isPositive {
-                    path.addCurve(
-                        to: CGPoint(x: width, y: height * 0.2),
-                        control1: CGPoint(x: width * 0.7, y: height * 0.4),
-                        control2: CGPoint(x: width * 0.8, y: height * 0.3)
-                    )
-                } else {
-                    path.addCurve(
-                        to: CGPoint(x: width, y: height * 0.7),
-                        control1: CGPoint(x: width * 0.7, y: height * 0.5),
-                        control2: CGPoint(x: width * 0.8, y: height * 0.8)
-                    )
-                }
-            }
-            .stroke(isPositive ? Color.green : Color.red, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-            
-            // Add gradient fill
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    (isPositive ? Color.green : Color.red).opacity(0.3),
-                    (isPositive ? Color.green : Color.red).opacity(0.01)
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .mask(
-                Path { path in
-                    // Start at the bottom left
-                    path.move(to: CGPoint(x: 0, y: height))
-                    
-                    // Line to the start of the curve
-                    path.addLine(to: CGPoint(x: 0, y: height * 0.5))
-                    
-                    // First curve up
-                    path.addCurve(
-                        to: CGPoint(x: width * 0.25, y: height * 0.4),
-                        control1: CGPoint(x: width * 0.1, y: height * 0.5),
-                        control2: CGPoint(x: width * 0.2, y: height * 0.3)
-                    )
-                    
-                    // Second curve down
-                    path.addCurve(
-                        to: CGPoint(x: width * 0.5, y: height * 0.6),
-                        control1: CGPoint(x: width * 0.3, y: height * 0.5),
-                        control2: CGPoint(x: width * 0.4, y: height * 0.7)
-                    )
-                    
-                    // Final curve up or down based on price change
-                    if isPositive {
-                        path.addCurve(
-                            to: CGPoint(x: width, y: height * 0.2),
-                            control1: CGPoint(x: width * 0.7, y: height * 0.4),
-                            control2: CGPoint(x: width * 0.8, y: height * 0.3)
-                        )
-                    } else {
-                        path.addCurve(
-                            to: CGPoint(x: width, y: height * 0.7),
-                            control1: CGPoint(x: width * 0.7, y: height * 0.5),
-                            control2: CGPoint(x: width * 0.8, y: height * 0.8)
-                        )
-                    }
-                    
-                    // Line to bottom right and close
-                    path.addLine(to: CGPoint(x: width, y: height))
-                    path.closeSubpath()
-                }
-            )
-        }
+    
+    private var footerSection: some View {
+        Text("Cryptocurrency Services Powered by Zero Hash")
+            .font(.custom("Satoshi-Black", size: 12))
+            .foregroundColor(.gray)
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
     }
 }
 
+// MARK: - Sparkline Data Models
 
 struct SparklineData: Codable {
     let price: [Double]
 }
 
-
-// MARK: - CryptoMarketViewModel
+// MARK: - View Model
 
 class CryptoMarketViewModel: ObservableObject {
     @Published var coins: [Coin] = []
+    @Published var isLoading = false
+    @Published var errorMessage: String?
     
     private var cancellables = Set<AnyCancellable>()
-    private var fetchTimer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
-    @Published var selectedCoinDetail: CoinDetail?
-    
-    init() {
-        fetchData()
-        fetchTimer
-            .sink { [weak self] _ in
-                self?.fetchData()
-            }
-            .store(in: &cancellables)
-    }
     
     func fetchData() {
+        isLoading = true
+        errorMessage = nil
         
-        guard let url = URL(string: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true") else {
+        guard let url = URL(string: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h") else {
+            errorMessage = "Invalid URL"
+            isLoading = false
             return
         }
         
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error {
-                print("Error fetching market data:", error)
-                return
-            }
-            guard let data = data else { return }
-            
-            do {
-                let decoded = try JSONDecoder().decode([Coin].self, from: data)
-                DispatchQueue.main.async {
-                    self.coins = decoded
+        URLSession.shared.dataTaskPublisher(for: url)
+            .map(\.data)
+            .decode(type: [Coin].self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    self?.isLoading = false
+                    if case .failure(let error) = completion {
+                        self?.errorMessage = error.localizedDescription
+                    }
+                },
+                receiveValue: { [weak self] coins in
+                    self?.coins = coins
                 }
-            } catch {
-                print("Decoding error:", error)
-            }
-        }.resume()
+            )
+            .store(in: &cancellables)
     }
     
     func fetchCoinDetail(id: String) {
-        DispatchQueue.main.async {
-            self.selectedCoinDetail = nil
-        }
-
-        let url = URL(string: "https://api.coingecko.com/api/v3/coins/\(id)")!
-            
-        URLSession.shared.dataTask(with: url) { data, _, _ in
-            if let data = data {
-                if let decoded = try? JSONDecoder().decode(CoinDetail.self, from: data) {
-                    DispatchQueue.main.async {
-                        self.selectedCoinDetail = decoded
-                    }
-                } else {
-                    print("Failed to decode detail for coin ID: \(id)")
-                }
-            } else {
-                print("Failed to fetch data for coin ID: \(id)")
-            }
-        }.resume()
+        // Implementation for fetching detailed coin information
+        // This would typically make another API call to get more detailed data
     }
+}
 
+// MARK: - Helper Functions
+
+func backgroundColorForSymbol(_ symbol: String) -> Color {
+    let lowercasedSymbol = symbol.lowercased()
+    
+    switch lowercasedSymbol {
+    case "btc", "bitcoin":
+        return Color(red: 1.0, green: 0.58, blue: 0.0) // Bitcoin orange
+    case "eth", "ethereum":
+        return Color(red: 0.46, green: 0.48, blue: 0.9) // Ethereum blue
+    case "bnb", "binance":
+        return Color(red: 0.8, green: 0.6, blue: 0.0) // Binance darker yellow
+    case "sol", "solana":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Solana black
+    case "ada", "cardano":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Cardano black
+    case "xrp", "ripple":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Ripple black
+    case "doge", "dogecoin":
+        return Color(red: 0.8, green: 0.6, blue: 0.0) // Dogecoin darker yellow
+    case "trx", "tron":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Tron black
+    case "usdt", "tether":
+        return Color(red: 0.0, green: 0.4, blue: 0.0) // Tether forest green
+    case "usde", "ethena-usde":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Ethena USDE black
+    case "wbeth", "wrapped-beth":
+        return Color(red: 1.0, green: 0.84, blue: 0.0) // Wrapped BETH golden yellow
+    case "wbtc", "wrapped-bitcoin":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Wrapped Bitcoin black
+    case "tao", "bittensor":
+        return Color(red: 1.0, green: 1.0, blue: 1.0) // Bittensor white
+    case "story":
+        return Color(red: 1.0, green: 0.84, blue: 0.0) // Story gold
+    case "jitosol", "jito-staked-sol":
+        return Color(red: 1.0, green: 1.0, blue: 1.0) // Jito Staked SOL white
+    case "apt", "aptos":
+        return Color(red: 1.0, green: 1.0, blue: 1.0) // Aptos white
+    case "steth", "lido-staked-ether":
+        return Color(red: 1.0, green: 1.0, blue: 1.0) // Lido Staked Ether white
+    case "usdc", "usd-coin":
+        return Color(red: 0.2, green: 0.4, blue: 0.9) // USDC blue
+    case "avax", "avalanche":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Avalanche red
+    case "matic", "polygon":
+        return Color(red: 0.6, green: 0.3, blue: 0.9) // Polygon purple
+    case "link", "chainlink":
+        return Color(red: 0.2, green: 0.4, blue: 0.8) // Chainlink blue
+    case "atom", "cosmos":
+        return Color(red: 0.2, green: 0.4, blue: 0.8) // Cosmos blue
+    case "near":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // NEAR orange
+    case "ftm", "fantom":
+        return Color(red: 0.2, green: 0.4, blue: 0.8) // Fantom blue
+    case "algo", "algorand":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Algorand black
+    case "vet", "vechain":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // VeChain cyan
+    case "icp", "internet-computer":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Internet Computer red
+    case "fil", "filecoin":
+        return Color(red: 0.2, green: 0.4, blue: 0.8) // Filecoin blue
+    case "hbar", "hedera":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Hedera black
+    case "sand", "the-sandbox":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // The Sandbox cyan
+    case "mana", "decentraland":
+        return Color(red: 0.8, green: 0.4, blue: 0.8) // Decentraland purple
+    case "axs", "axie-infinity":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Axie Infinity cyan
+    case "gala":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Gala orange
+    case "enj", "enjin-coin":
+        return Color(red: 0.4, green: 0.6, blue: 0.8) // Enjin Coin blue
+    case "chz", "chiliz":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Chiliz red
+    case "flow":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Flow cyan
+    case "theta":
+        return Color(red: 0.2, green: 0.4, blue: 0.8) // Theta blue
+    case "klay", "klaytn":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Klaytn teal
+    case "eos":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // EOS black
+    case "xtz", "tezos":
+        return Color(red: 0.2, green: 0.4, blue: 0.8) // Tezos blue
+    case "zec", "zcash":
+        return Color(red: 0.8, green: 0.6, blue: 0.0) // Zcash yellow
+    case "dash":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Dash cyan
+    case "xlm", "stellar":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Stellar blue
+    case "neo":
+        return Color(red: 0.0, green: 0.8, blue: 0.0) // NEO green
+    case "qtum":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Qtum orange
+    case "waves":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Waves cyan
+    case "omg", "omg-network":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // OMG Network red
+    case "zrx", "0x":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // 0x black
+    case "bat", "basic-attention-token":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Basic Attention Token orange
+    case "knc", "kyber-network":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Kyber Network cyan
+    case "lrc", "loopring":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Loopring blue
+    case "rep", "augur":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Augur red
+    case "gnt", "golem":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Golem teal
+    case "mkr", "maker":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Maker orange
+    case "snx", "synthetix":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Synthetix black
+    case "comp", "compound":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Compound cyan
+    case "yfi", "yearn-finance":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Yearn Finance teal
+    case "uni", "uniswap":
+        return Color(red: 0.8, green: 0.2, blue: 0.8) // Uniswap pink
+    case "aave":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Aave red
+    case "sushi", "sushiswap":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // SushiSwap teal
+    case "crv", "curve-dao-token":
+        return Color(red: 0.0, green: 0.8, blue: 0.0) // Curve DAO Token green
+    case "1inch":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // 1inch black
+    case "bal", "balancer":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Balancer cyan
+    case "lpt", "livepeer":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Livepeer blue
+    case "ren", "republic-protocol":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Republic Protocol black
+    case "uma", "uma":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // UMA orange
+    case "band":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Band Protocol teal
+    case "nkn":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // NKN blue
+    case "ocean", "ocean-protocol":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Ocean Protocol cyan
+    case "rsr", "reserve-rights":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Reserve Rights red
+    case "nmr", "numeraire":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Numeraire black
+    case "ant", "aragon":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Aragon cyan
+    case "lend", "ethlend":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Aave (formerly ETHLend) blue
+    case "cvc", "civic":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Civic teal
+    case "dnt", "district0x":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // district0x black
+    case "gno", "gnosis":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Gnosis teal
+    case "powr", "power-ledger":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Power Ledger orange
+    case "req", "request-network":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Request Network blue
+    case "salt":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // SALT cyan
+    case "storj":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Storj blue
+    case "sub", "substratum":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Substratum teal
+    case "wtc", "waltonchain":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Waltonchain black
+    case "zil", "zilliqa":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Zilliqa cyan
+    case "fun", "funfair":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // FunFair orange
+    case "kcs", "kucoin-shares":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // KuCoin Shares teal
+    case "nano":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Nano blue
+    case "iost":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // IOST red
+    case "btt", "bit torrent":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // BitTorrent cyan
+    case "hot", "holo":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Holo teal
+    case "zrx", "0x-protocol":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // 0x Protocol black
+    case "icx", "icon":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // ICON blue
+    case "ont", "ontology":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Ontology black
+    case "zec", "zcash":
+        return Color(red: 0.8, green: 0.6, blue: 0.0) // Zcash yellow
+    case "dash":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Dash cyan
+    case "xlm", "stellar":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Stellar blue
+    case "neo":
+        return Color(red: 0.0, green: 0.8, blue: 0.0) // NEO green
+    case "qtum":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Qtum orange
+    case "waves":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Waves cyan
+    case "omg", "omg-network":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // OMG Network red
+    case "zrx", "0x":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // 0x black
+    case "bat", "basic-attention-token":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Basic Attention Token orange
+    case "knc", "kyber-network":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Kyber Network cyan
+    case "lrc", "loopring":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Loopring blue
+    case "rep", "augur":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Augur red
+    case "gnt", "golem":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Golem teal
+    case "mkr", "maker":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Maker orange
+    case "snx", "synthetix":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Synthetix black
+    case "comp", "compound":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Compound cyan
+    case "yfi", "yearn-finance":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Yearn Finance teal
+    case "uni", "uniswap":
+        return Color(red: 0.8, green: 0.2, blue: 0.8) // Uniswap pink
+    case "aave":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Aave red
+    case "sushi", "sushiswap":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // SushiSwap teal
+    case "crv", "curve-dao-token":
+        return Color(red: 0.0, green: 0.8, blue: 0.0) // Curve DAO Token green
+    case "1inch":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // 1inch black
+    case "bal", "balancer":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Balancer cyan
+    case "lpt", "livepeer":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Livepeer blue
+    case "ren", "republic-protocol":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Republic Protocol black
+    case "uma", "uma":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // UMA orange
+    case "band":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Band Protocol teal
+    case "nkn":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // NKN blue
+    case "ocean", "ocean-protocol":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Ocean Protocol cyan
+    case "rsr", "reserve-rights":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // Reserve Rights red
+    case "nmr", "numeraire":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Numeraire black
+    case "ant", "aragon":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Aragon cyan
+    case "lend", "ethlend":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Aave (formerly ETHLend) blue
+    case "cvc", "civic":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Civic teal
+    case "dnt", "district0x":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // district0x black
+    case "gno", "gnosis":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Gnosis teal
+    case "powr", "power-ledger":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // Power Ledger orange
+    case "req", "request-network":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Request Network blue
+    case "salt":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // SALT cyan
+    case "storj":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Storj blue
+    case "sub", "substratum":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Substratum teal
+    case "wtc", "waltonchain":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Waltonchain black
+    case "zil", "zilliqa":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // Zilliqa cyan
+    case "fun", "funfair":
+        return Color(red: 0.8, green: 0.4, blue: 0.2) // FunFair orange
+    case "kcs", "kucoin-shares":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // KuCoin Shares teal
+    case "nano":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // Nano blue
+    case "iost":
+        return Color(red: 0.8, green: 0.2, blue: 0.2) // IOST red
+    case "btt", "bit torrent":
+        return Color(red: 0.0, green: 0.6, blue: 0.8) // BitTorrent cyan
+    case "hot", "holo":
+        return Color(red: 0.0, green: 0.6, blue: 0.4) // Holo teal
+    case "zrx", "0x-protocol":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // 0x Protocol black
+    case "icx", "icon":
+        return Color(red: 0.0, green: 0.4, blue: 0.8) // ICON blue
+    case "ont", "ontology":
+        return Color(red: 0.0, green: 0.0, blue: 0.0) // Ontology black
+    default:
+        // Fallback: generate a color based on the symbol's hash
+        let colors = [
+            Color(red: 0.2, green: 0.4, blue: 0.8), // Blue
+            Color(red: 0.8, green: 0.2, blue: 0.2), // Red
+            Color(red: 0.0, green: 0.6, blue: 0.4), // Teal
+            Color(red: 0.8, green: 0.4, blue: 0.2), // Orange
+            Color(red: 0.6, green: 0.2, blue: 0.8), // Purple
+            Color(red: 0.0, green: 0.8, blue: 0.0), // Green
+            Color(red: 0.8, green: 0.8, blue: 0.2), // Yellow
+            Color(red: 0.8, green: 0.2, blue: 0.8)  // Pink
+        ]
+        
+        let hash = lowercasedSymbol.hashValue
+        return colors[abs(hash) % colors.count]
+    }
+}
+
+// MARK: - Extensions
+
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
+extension Double {
+    var asFormattedCurrency: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.currencySymbol = "$"
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 2
+        
+        // Add spaces for thousands separator like in the image
+        let formatted = formatter.string(from: NSNumber(value: self)) ?? "$0.00"
+        return formatted.replacingOccurrences(of: ",", with: " ")
+    }
 }

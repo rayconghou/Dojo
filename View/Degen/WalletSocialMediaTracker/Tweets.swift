@@ -11,7 +11,7 @@ import SwiftUI
 /// Twitter-like card for sentiment analysis
 struct TweetCard: View {
     var asset: DegenAsset
-    var influencerType: SentimentAnalysisView.SentimentFilter
+    var influencerType: SentimentFilterSelector.SentimentFilter
     
     // Sample data
     private var influencerName: String {
@@ -73,103 +73,197 @@ struct TweetCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             // Header with influencer info
             HStack(spacing: 12) {
                 // Profile pic placeholder
                 ZStack {
                     Circle()
-                        .fill(LinearGradient(
-                            gradient: Gradient(colors: [.blue.opacity(0.7), .purple.opacity(0.7)]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 44, height: 44)
+                        .fill(Color(hex: "2C1F41"))
+                        .frame(width: 48, height: 48)
+                        .overlay(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.black.opacity(0.3), Color.gray.opacity(0.1)]),
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(Color(hex: "3C2D44"), lineWidth: 1)
+                        )
                     
                     Text(String(influencerName.prefix(1)))
-                        .font(.headline)
-                        .fontWeight(.bold)
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.white)
                 }
                 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
                         Text(influencerName)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
                         
                         if influencerType == .celebrities || influencerType == .whales {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                            Image("TwitterVerified")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 16, height: 16)
                         }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.6))
                     }
                     
                     HStack(spacing: 4) {
                         Text(username)
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundColor(.white.opacity(0.7))
                         
                         Text("•")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundColor(.white.opacity(0.7))
                         
                         Text(tweetTime)
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundColor(.white.opacity(0.7))
                     }
                 }
+            }
+            
+            // Asset tags
+            HStack(spacing: 8) {
+                Text("$\(asset.symbol)")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color(hex: "FBCFFF"),
+                                Color(hex: "B16EFF"),
+                                Color(hex: "F7B0FE")
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(hex: "2C1F41"))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color(hex: "3C2D44"), lineWidth: 1)
+                    )
                 
                 Spacer()
-                
-                // Sentiment indicator
-                Image(systemName: sentimentIcon)
-                    .foregroundColor(sentimentColor)
-                    .font(.headline)
             }
             
             // Tweet content
             Text(tweetContent)
-                .font(.subheadline)
-                .lineSpacing(4)
-            
-            // Asset tag
-            HStack {
-                Text("$\(asset.symbol)")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(6)
-                
-                Spacer()
-            }
+                .font(.system(size: 15, weight: .regular))
+                .foregroundColor(.white)
+                .lineSpacing(2)
             
             // Tweet engagement stats
             HStack(spacing: 16) {
-                Label("\(engagementNumbers.likes)", systemImage: "heart")
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                // Likes bubble
+                HStack(spacing: 6) {
+                    Image("Heart")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 14, height: 14)
+                        .foregroundColor(.white)
+                    
+                    Text("\(engagementNumbers.likes)")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(hex: "2C1F41"))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(hex: "3C2D44"), lineWidth: 1)
+                )
                 
-                Label("\(engagementNumbers.retweets)", systemImage: "arrow.2.squarepath")
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                // Comments bubble
+                HStack(spacing: 6) {
+                    Image("Comment")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 14, height: 14)
+                        .foregroundColor(.white)
+                    
+                    Text("\(engagementNumbers.retweets)")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(hex: "2C1F41"))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(hex: "3C2D44"), lineWidth: 1)
+                )
+                
+                // Reposts bubble
+                HStack(spacing: 6) {
+                    Image("Retweet")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 14, height: 14)
+                        .foregroundColor(.white)
+                    
+                    Text("\(Int.random(in: 1...20) * 1000)")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(hex: "2C1F41"))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(hex: "3C2D44"), lineWidth: 1)
+                )
                 
                 Spacer()
-                
-                Button(action: {}) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                }
             }
         }
-        .padding(16)
-        .background(Color(UIColor.secondarySystemBackground))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: Color(hex: "130825"), location: 0.0),
+                            .init(color: Color(hex: "4F2FB6").opacity(0.1), location: 1.0)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(hex: "3C2D44"), lineWidth: 1)
+        )
     }
 }
 
@@ -205,42 +299,117 @@ struct SentimentBubble: View {
     }
 }
 
+/// Custom segment picker for Trending/Celebrities/Whales
+struct SentimentFilterSelector: View {
+    @Binding var selectedFilter: SentimentFilter
+    
+    enum SentimentFilter: String, CaseIterable {
+        case trending = "TRENDING"
+        case celebrities = "CELEBRITIES"
+        case whales = "WHALES"
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            // TRENDING Button
+            Button(action: {
+                selectedFilter = .trending
+            }) {
+                Text("TRENDING")
+                    .font(.custom("Korosu", size: 15))
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 40)
+                    .background(
+                        selectedFilter == .trending ?
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(hex: "4F2FB6"), Color(hex: "F7B0FE")]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ) :
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.clear, Color.clear]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(8, corners: [.topLeft, .bottomLeft])
+            }
+            
+            // CELEBRITIES Button
+            Button(action: {
+                selectedFilter = .celebrities
+            }) {
+                Text("CELEBRITIES")
+                    .font(.custom("Korosu", size: 15))
+                    .fontWeight(.regular)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 40)
+                    .background(
+                        selectedFilter == .celebrities ?
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(hex: "4F2FB6"), Color(hex: "F7B0FE")]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ) :
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.clear, Color.clear]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            }
+            
+            // WHALES Button
+            Button(action: {
+                selectedFilter = .whales
+            }) {
+                Text("WHALES")
+                    .font(.custom("Korosu", size: 15))
+                    .fontWeight(.regular)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 40)
+                    .background(
+                        selectedFilter == .whales ?
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(hex: "4F2FB6"), Color(hex: "F7B0FE")]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ) :
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.clear, Color.clear]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(8, corners: [.topRight, .bottomRight])
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(hex: "1A0B2E").opacity(0.8))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(hex: "4A148C").opacity(0.6), lineWidth: 1)
+        )
+    }
+}
+
 /// The sentiment analysis view showing Twitter trends
 struct SentimentAnalysisView: View {
     @ObservedObject var viewModel: TradingWalletViewModel
     @Binding var selectedAsset: DegenAsset?
-    @State private var selectedFilter: SentimentFilter = .trending
-    
-    enum SentimentFilter: String, CaseIterable {
-        case trending = "Trending"
-        case celebrities = "Celebrities"
-        case whales = "Whales"
-    }
+    @Binding var selectedFilter: SentimentFilterSelector.SentimentFilter
     
     var body: some View {
         VStack(spacing: 0) {
-            // Filter tabs
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(SentimentFilter.allCases, id: \.self) { filter in
-                        FilterChip(
-                            title: filter.rawValue,
-                            isSelected: selectedFilter == filter,
-                            action: {
-                                withAnimation {
-                                    selectedFilter = filter
-                                }
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 12)
-            }
-            
             // Asset filter chip row
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     AssetFilterChip(
                         title: "All Assets",
                         isSelected: selectedAsset == nil,
@@ -267,8 +436,8 @@ struct SentimentAnalysisView: View {
                         )
                     }
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 12)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             }
             
             // Sentiment tweets

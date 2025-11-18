@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseCore
+import CoreText
 
 struct Constants {
     static let typing_wait_time = 0.5
@@ -18,8 +19,33 @@ struct DojoApp: App {
     
     init() {
         FirebaseApp.configure()
+        registerCustomFonts()
+    }
+    
+    private func registerCustomFonts() {
+        // Register The Last Shuriken font
+        if let fontURL = Bundle.main.url(forResource: "The Last Shuriken", withExtension: "ttf") {
+            CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, nil)
+        }
         
-        authManager = AuthManager.shared
+        // Register Korosu font
+        if let fontURL = Bundle.main.url(forResource: "Korosu", withExtension: "ttf") {
+            CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, nil)
+        }
+        
+        // Register Satoshi fonts - all variants we're using
+        let satoshiFonts = [
+            "Satoshi-Black", "Satoshi-BlackItalic", 
+            "Satoshi-Bold", "Satoshi-BoldItalic",
+            "Satoshi-Medium", "Satoshi-MediumItalic",
+            "Satoshi-Regular", "Satoshi-Italic",
+            "Satoshi-Light", "Satoshi-LightItalic"
+        ]
+        for fontName in satoshiFonts {
+            if let fontURL = Bundle.main.url(forResource: fontName, withExtension: "ttf") {
+                CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, nil)
+            }
+        }
     }
     var body: some Scene {
         WindowGroup {

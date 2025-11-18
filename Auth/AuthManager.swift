@@ -1,7 +1,6 @@
 import Foundation
 import FirebaseAuth
-import AWSSQS
-import SwiftUI
+// import AWSSQS // Temporarily disabled
 
 enum AuthError: Error {
     case noCurrentUserAfterCreatingUser
@@ -60,6 +59,29 @@ class AuthManager: ObservableObject {
                 }
             }
         }
+    }
+    
+    func addUserToDB(firebase_uid: String, email: String, username: String) async {
+        // Temporarily disabled - AWS SDK removed for package resolution issues
+        // TODO: Re-enable when AWS SDK is added back
+        print("addUserToDB called but AWS SDK is temporarily disabled")
+        /*
+        do {
+            let config = try await SQSClient.SQSClientConfiguration(region: AuthManager.aws_region)
+            let sqsClient = SQSClient(config: config)
+            _ = try await sqsClient.sendMessage(
+                input: SendMessageInput(
+                    messageBody: "{\"firebase_uid\":\"\(firebase_uid)\",\"username\":\"\(username)\",\"email\":\"\(email)\"}",
+                    queueUrl: "https://sqs.\(AuthManager.aws_region).amazonaws.com/497197924608/LambdaRDSQueue"
+                )
+            )
+        } catch _ as AWSSQS.QueueDoesNotExist {
+            print("Error: The specified queue doesn't exist.")
+            return
+        } catch {
+            print("Error: \(error)")
+        }
+        */
     }
     
     func signIn(email: String, password: String, completion: @escaping (Result<Void, Error>) -> Void) {

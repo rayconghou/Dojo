@@ -21,832 +21,1180 @@ struct CreateIndexView: View {
     @State private var searchText = ""
     @State private var currentStep = 0
     @State private var showingPreview = false
+    @State private var isPublic = true
+    @State private var assetAllocations: [String: Double] = [:]
     
     // Steps in the creation process
-    let steps = ["Details", "Select Coins", "Allocation", "Review"]
+    let steps = ["Details", "Select Assets", "Allocation", "Preview"]
     
     var body: some View {
-        NavigationStack {
+        ZStack {
+            // Background - same as other screens
+            Color(hex: "050715")
+                .ignoresSafeArea(.all)
+            
             VStack(spacing: 0) {
-                // Progress indicator
-                ProgressStepsView(steps: steps, currentStep: $currentStep)
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
-                
-                // Main content based on current step
-                ScrollView {
-                    VStack(spacing: 16) {
-                        switch currentStep {
-                        case 0:
-                            indexDetailsView
-                        case 1:
-                            coinSelectionView
-                        case 2:
-                            allocationView
-                        case 3:
-                            reviewView
-                        default:
-                            EmptyView()
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                }
-                
-                // Bottom navigation buttons
-                HStack(spacing: 16) {
-                    if currentStep > 0 {
-                        Button(action: {
-                            withAnimation {
-                                currentStep -= 1
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: "chevron.left")
-                                Text("Back")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.accentColor, lineWidth: 1)
-                            )
-                        }
-                        .foregroundColor(.accentColor)
-                    }
-                    
-                    Button(action: {
-                        if currentStep < steps.count - 1 {
-                            withAnimation {
-                                currentStep += 1
-                            }
-                        } else {
-                            // Create and publish index
-                            showingPreview = true
-                        }
-                    }) {
-                        Text(currentStep < steps.count - 1 ? "Continue" : "Create Index")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.accentColor)
-                            )
-                            .foregroundColor(.white)
-                    }
-                    .disabled(currentStep == 0 && indexName.isEmpty ||
-                              currentStep == 1 && selectedCoins.isEmpty)
-                }
-                .padding()
-            }
-            .navigationTitle("Create Custom Index")
-            .navigationBarTitleDisplayMode(.inline)
-            .background(Color.black.edgesIgnoringSafeArea(.all))
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                // Header
+                HStack {
                     Button(action: {
                         dismiss()
                     }) {
-                        Image(systemName: "xmark")
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 18, weight: .medium))
                             .foregroundColor(.white)
+                    }
+                    
+                    Spacer()
+                    
+                    Text("Index Creator")
+                        .font(.custom("Satoshi-Bold", size: 24))
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Color.clear
+                        .frame(width: 18)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 20)
+                
+                // Main content
+                ScrollView {
+                    switch currentStep {
+                    case 0:
+                        indexDetailsView
+                    case 1:
+                        coinSelectionView
+                    case 2:
+                        allocationView
+                    case 3:
+                        reviewView
+                    default:
+                        EmptyView()
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if currentStep == 1 {
+                // Bottom section
+                VStack(spacing: 0) {
+                    HStack(spacing: 16) {
+                        if currentStep > 0 {
+                            Button(action: {
+                                withAnimation {
+                                    currentStep -= 1
+                                }
+                            }) {
+                                Text("Back")
+                                    .font(.custom("Satoshi-Bold", size: 16))
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white)
+                                    )
+                            }
+                        }
+                        
                         Button(action: {
-                            // Show help about selection criteria
+                            if currentStep < steps.count - 1 {
+                                withAnimation {
+                                    currentStep += 1
+                                }
+                            } else {
+                                showingPreview = true
+                            }
                         }) {
-                            Image(systemName: "questionmark.circle")
+                            Text(currentStep < steps.count - 1 ? "Next Step" : "Create Index")
+                                .font(.custom("Satoshi-Bold", size: 16))
                                 .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [
+                                                    Color(red: 0.2, green: 0.5, blue: 1.0),
+                                                    Color(red: 0.1, green: 0.3, blue: 0.8)
+                                                ]),
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                )
+                        }
+                        .disabled(!canProceedToNextStep)
+                        .opacity(canProceedToNextStep ? 1.0 : 0.5)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 16)
+                    
+                    HStack(spacing: 8) {
+                        ForEach(0..<steps.count, id: \.self) { index in
+                            Rectangle()
+                                .fill(index <= currentStep ? Color.white : Color.gray.opacity(0.3))
+                                .frame(height: 4)
+                                .cornerRadius(2)
                         }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
                 }
             }
-            .sheet(isPresented: $showingPreview) {
-                IndexCreatedView(
-                    selectedTab: $selectedTab,
-                    isPresented: $isPresented,
-                    leaderboardVM: leaderboardVM,
-                    indexName: indexName,
-                    coins: selectedCoins
-                )
-            }
         }
-        .preferredColorScheme(.dark)
     }
     
     // MARK: - Step 1: Index Details
     private var indexDetailsView: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Create Your Custom Index")
-                .font(.title2)
-                .fontWeight(.bold)
+            Text("Create a Custom Index")
+                .font(.custom("Satoshi-Bold", size: 24))
+                .foregroundColor(.white)
             
             Text("Start by giving your index a name and description that helps others understand your investment thesis.")
-                .foregroundColor(.secondary)
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.gray)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Index Name")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                TextField("e.g., AI Disruptors 2025", text: $indexName)
-                    .padding()
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(12)
+            Text("Name")
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.white)
+            
+            TextField("Index Name (e.g. AI Disruptors 2025)", text: $indexName)
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(hex: "141628"))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                )
+            
+            if currentStep == 0 && indexName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text("Index name is required")
+                    .font(.custom("Satoshi-Bold", size: 12))
+                    .foregroundColor(.red)
             }
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Description (Optional)")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                TextEditor(text: $indexDescription)
-                    .frame(height: 120)
-                    .padding(8)
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(12)
-            }
+            Text("Description")
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.white)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Primary Category")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(IndexCategory.allCases, id: \.self) { category in
-                            CategoryButton(
-                                title: category.rawValue,
-                                isSelected: selectedCategory == category,
-                                action: { selectedCategory = category }
+            TextField("Index Description (Optional)", text: $indexDescription)
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(hex: "141628"))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                )
+            
+            Text("Primary Category")
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.white)
+            
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+                ForEach(IndexCategory.allCases, id: \.self) { category in
+                    Button(action: {
+                        selectedCategory = category
+                    }) {
+                        Text(category.rawValue)
+                            .font(.custom("Satoshi-Bold", size: 14))
+                            .foregroundColor(selectedCategory == category ? .black : .white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(selectedCategory == category ? Color.white : Color(hex: "141628"))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                    )
                             )
-                        }
                     }
                 }
-                .padding(.bottom, 8)
             }
             
+            Text("Public Visibility")
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.white)
+            
             HStack {
-                VStack(alignment: .leading) {
-                    Text("Index Visibility")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                Text("Public Indexes are visible to all users")
+                    .font(.custom("Satoshi-Bold", size: 14))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Toggle("", isOn: $isPublic)
+                    .toggleStyle(SwitchToggleStyle(tint: Color.blue))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: "141628"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            
+            Text("Index Picture")
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.white)
+            
+            HStack {
+                Image(systemName: "person.circle")
+                    .font(.system(size: 40))
+                    .foregroundColor(.white)
+                    .frame(width: 60, height: 60)
+                    .background(Color.gray.opacity(0.2))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                
+                Button(action: {
+                    // TODO: Implement photo upload
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.up.circle")
+                            .font(.system(size: 16))
+                            .foregroundColor(.white)
+                        
+                        Text("Upload Photo")
+                            .font(.custom("Satoshi-Bold", size: 14))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(hex: "141628"))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
+                    )
+                }
+                
+                Spacer()
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    // MARK: - Step 2: Select Assets
+    private var coinSelectionView: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Select Assets")
+                .font(.custom("Satoshi-Bold", size: 24))
+                .foregroundColor(.white)
+            
+            Text("Choose up to 10 assets for your customs index.")
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.gray)
+            
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                
+                TextField("Search tokens", text: $searchText)
+                    .font(.custom("Satoshi-Bold", size: 16))
+                    .foregroundColor(.white)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: "141628"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            
+            LazyVStack(spacing: 12) {
+                ForEach(mockCoins, id: \.symbol) { coin in
+                    AssetSelectionCard(
+                        coin: coin,
+                        isSelected: selectedCoins.contains { $0.symbol == coin.symbol },
+                        onToggle: {
+                            if selectedCoins.contains(where: { $0.symbol == coin.symbol }) {
+                                selectedCoins.removeAll { $0.symbol == coin.symbol }
+                            } else if selectedCoins.count < 10 {
+                                selectedCoins.append(coin)
+                            }
+                        }
+                    )
+                }
+            }
+            
+            if currentStep == 1 && selectedCoins.isEmpty {
+                Text("Please select at least one asset")
+                    .font(.custom("Satoshi-Bold", size: 12))
+                    .foregroundColor(.red)
+            } else if currentStep == 1 && selectedCoins.count >= 10 {
+                Text("Maximum 10 assets allowed")
+                    .font(.custom("Satoshi-Bold", size: 12))
+                    .foregroundColor(.orange)
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    // MARK: - Step 3: Allocation
+    private var allocationView: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Allocate your assets")
+                .font(.custom("Satoshi-Bold", size: 24))
+                .foregroundColor(.white)
+            
+            Text("Choose the percentage for each asset.")
+                .font(.custom("Satoshi-Bold", size: 16))
+                .foregroundColor(.gray)
+            
+            HStack {
+                Image(systemName: "chart.pie")
+                    .font(.system(size: 24))
+                    .foregroundColor(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Color.blue.opacity(0.2))
+                    .clipShape(Circle())
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Total Allocated")
+                        .font(.custom("Satoshi-Bold", size: 14))
+                        .foregroundColor(.white)
                     
-                    Text("Public indexes are visible to all users")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text("\(Int(totalAllocation))%")
+                        .font(.custom("Satoshi-Bold", size: 24))
+                        .foregroundColor(.white)
+                }
+                
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: "1A1C2E"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            
+            if totalAllocation != 100 {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundColor(.red)
+                    
+                    Text("Please increase allocations to reach 100%")
+                        .font(.custom("Satoshi-Bold", size: 14))
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.red.opacity(0.2))
+                )
+            }
+            
+            Text("Asset Allocations")
+                .font(.custom("Satoshi-Bold", size: 20))
+                .foregroundColor(.white)
+            
+            LazyVStack(spacing: 12) {
+                ForEach(selectedCoins, id: \.symbol) { coin in
+                    AssetAllocationCard(
+                        coin: coin,
+                        allocation: assetAllocations[coin.symbol] ?? 0,
+                        onAllocationChange: { newAllocation in
+                            assetAllocations[coin.symbol] = newAllocation
+                        },
+                        onRemove: {
+                            selectedCoins.removeAll { $0.symbol == coin.symbol }
+                            assetAllocations.removeValue(forKey: coin.symbol)
+                        }
+                    )
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    // MARK: - Step 4: Review
+    private var reviewView: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Preview Card")
+                .font(.custom("Satoshi-Bold", size: 24))
+                .foregroundColor(.white)
+            
+            HStack(spacing: 12) {
+                Image("Profile")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(indexName.isEmpty ? "AI James Select" : indexName)
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
+                    
+                    Text("by @jameswang")
+                        .font(.custom("Satoshi-Bold", size: 14))
+                        .foregroundColor(.gray)
                 }
                 
                 Spacer()
                 
-                Toggle("", isOn: .constant(true))
-                    .labelsHidden()
-            }
-            .padding()
-            .background(Color(UIColor.secondarySystemBackground))
-            .cornerRadius(12)
-            
-            Spacer()
-        }
-    }
-    
-    // MARK: - Step 2: Coin Selection
-    private var coinSelectionView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Select Assets")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("Choose up to 10 assets for your custom index.")
-                .foregroundColor(.secondary)
-            
-            // Search and Category filter
-            HStack {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("▲ 0%")
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.green)
                     
-                    TextField("Search coins", text: $searchText)
-                }
-                .padding()
-                .background(Color(UIColor.secondarySystemBackground))
-                .cornerRadius(12)
-                
-                Menu {
-                    ForEach(IndexCategory.allCases, id: \.self) { category in
-                        Button(action: {
-                            selectedCategory = category
-                        }) {
-                            HStack {
-                                Text(category.rawValue)
-                                if selectedCategory == category {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
-                        .font(.title2)
-                        .foregroundColor(.accentColor)
+                    Text("ROI")
+                        .font(.custom("Satoshi-Bold", size: 14))
+                        .foregroundColor(.gray)
                 }
             }
-            
-            // Selected coins section
-            if !selectedCoins.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Selected (\(selectedCoins.count)/10)")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(selectedCoins) { coin in
-                                SelectedCoinTag(coin: coin) {
-                                    if let index = selectedCoins.firstIndex(where: { $0.id == coin.id }) {
-                                        selectedCoins.remove(at: index)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                .padding(.vertical, 8)
-            }
-            
-            // Available coins
-            Text(selectedCategory == .all ? "Popular Assets" : selectedCategory.rawValue)
-                .font(.headline)
-                .foregroundColor(.secondary)
-            
-            ForEach(filteredCoins) { coin in
-                CoinSelectionRow(
-                    coin: coin,
-                    isSelected: selectedCoins.contains { $0.id == coin.id },
-                    onSelect: {
-                        toggleCoinSelection(coin)
-                    }
-                )
-            }
-        }
-    }
-    
-    // MARK: - Step 3: Allocation View
-    private var allocationView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Set Allocations")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("Adjust the percentage allocation for each asset. Total must equal 100%.")
-                .foregroundColor(.secondary)
-            
-            AllocationSummaryCard(
-                allocatedPercentage: selectedCoins.map { $0.allocation }.reduce(0, +),
-                averageAllocation: Double(selectedCoins.isEmpty ? 0 : 100 / selectedCoins.count)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: "141628"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
             )
             
-            // Equal weight button
-            Button(action: {
-                let equalWeight = 100 / selectedCoins.count
-                for i in 0..<selectedCoins.count {
-                    selectedCoins[i].allocation = Double(equalWeight)
-                }
-            }) {
+            Text("Index Resume")
+                .font(.custom("Satoshi-Bold", size: 20))
+                .foregroundColor(.white)
+            
+            Text("Check all the settings of your index.")
+                .font(.custom("Satoshi-Bold", size: 14))
+                .foregroundColor(.gray)
+            
+            VStack(spacing: 12) {
                 HStack {
-                    Image(systemName: "equal.square.fill")
-                    Text("Equal Weight")
+                    Text("Name")
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Text(indexName.isEmpty ? "AI James Select" : indexName)
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color(UIColor.tertiarySystemBackground))
-                .cornerRadius(12)
-            }
-            .padding(.vertical, 8)
-            
-            Text("Asset Allocations")
-                .font(.headline)
-                .foregroundColor(.secondary)
-            
-            ForEach(0..<selectedCoins.count, id: \.self) { index in
-                AllocationRow(
-                    coin: $selectedCoins[index],
-                    onDelete: {
-                        selectedCoins.remove(at: index)
-                    }
-                )
-            }
-        }
-    }
-    
-    // MARK: - Step 4: Review View
-    private var reviewView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Review Your Index")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            IndexPreviewCard(name: indexName, description: indexDescription, category: selectedCategory)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Composition")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
                 
-                CompositionPieChart(coins: selectedCoins)
-                    .frame(height: 200)
+                HStack {
+                    Text("Description")
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Text(indexDescription.isEmpty ? "The Best AI Meme Coins Selection of 2025" : indexDescription)
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
+                }
                 
-                ForEach(selectedCoins.sorted { $0.allocation > $1.allocation }) { coin in
-                    HStack {
-                        Circle()
-                            .fill(coin.color)
-                            .frame(width: 10, height: 10)
+                HStack {
+                    Text("Categories")
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 8) {
+                        Text("DeFi")
+                            .font(.custom("Satoshi-Bold", size: 14))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color(hex: "272A45"))
+                            )
                         
-                        Text(coin.symbol)
-                            .fontWeight(.medium)
+                        Text("Gaming")
+                            .font(.custom("Satoshi-Bold", size: 14))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color(hex: "272A45"))
+                            )
+                    }
+                }
+                
+                HStack {
+                    Text("Visibility")
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("Public")
+                            .font(.custom("Satoshi-Bold", size: 16))
+                            .foregroundColor(.white)
+                        
+                        Text("Everyone can see your index")
+                            .font(.custom("Satoshi-Bold", size: 14))
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: "141628"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            
+            Text("Index Composition")
+                .font(.custom("Satoshi-Bold", size: 20))
+                .foregroundColor(.white)
+            
+            Text("Check all the assets allocations.")
+                .font(.custom("Satoshi-Bold", size: 14))
+                .foregroundColor(.gray)
+            
+            VStack(spacing: 12) {
+                ForEach(selectedCoins, id: \.symbol) { coin in
+                    HStack {
+                        tokenIcon(for: coin.symbol)
+                            .frame(width: 24, height: 24)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(coin.name)
+                                .font(.custom("Satoshi-Bold", size: 18))
+                                .foregroundColor(.white)
+                            
+                            Text(coin.symbol)
+                                .font(.custom("Satoshi-Bold", size: 14))
+                                .foregroundColor(.gray)
+                        }
                         
                         Spacer()
                         
-                        Text("\(Int(coin.allocation))%")
+                        Text("\(Int(assetAllocations[coin.symbol] ?? 0))%")
+                            .font(.custom("Satoshi-Bold", size: 18))
+                            .foregroundColor(.white)
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            .padding()
-            .background(Color(UIColor.secondarySystemBackground))
-            .cornerRadius(12)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: "141628"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
             
-            // Key metrics
             Text("Projected Performance")
-                .font(.headline)
-                .foregroundColor(.secondary)
-                .padding(.top, 8)
+                .font(.custom("Satoshi-Bold", size: 20))
+                .foregroundColor(.white)
             
-            HStack(spacing: 12) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
                 MetricCard(title: "Risk Rating", value: "Medium")
                 MetricCard(title: "Est. Annual Return", value: "+12.4%")
-            }
-            
-            HStack(spacing: 12) {
                 MetricCard(title: "Volatility", value: "Medium")
                 MetricCard(title: "Sharpe Ratio", value: "1.32")
             }
         }
+        .padding(.horizontal, 20)
     }
     
-    // Helper function to toggle coin selection
-    private func toggleCoinSelection(_ coin: CoinIndex) {
-        if let index = selectedCoins.firstIndex(where: { $0.id == coin.id }) {
-            selectedCoins.remove(at: index)
-        } else {
-            // Limit to 10 coins
-            if selectedCoins.count < 10 {
-                var newCoin = coin
-                // Set initial allocation
-                newCoin.allocation = Double(100 / (selectedCoins.count + 1))
-                // Update existing coins to maintain 100% total
-                let newAllocation = 100 / (selectedCoins.count + 1)
-                for i in 0..<selectedCoins.count {
-                    selectedCoins[i].allocation = Double(newAllocation)
-                }
-                selectedCoins.append(newCoin)
-            }
+    // MARK: - Computed Properties
+    private var totalAllocation: Double {
+        assetAllocations.values.reduce(0, +)
+    }
+    
+    private var canProceedToNextStep: Bool {
+        switch currentStep {
+        case 0: // Details step
+            return !indexName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case 1: // Select Assets step
+            return !selectedCoins.isEmpty && selectedCoins.count <= 10
+        case 2: // Allocation step
+            return totalAllocation == 100.0 && !selectedCoins.isEmpty
+        case 3: // Preview step
+            return true // Always allow proceeding from preview
+        default:
+            return false
         }
     }
     
-    // Filtered coins based on search and category
-    private var filteredCoins: [CoinIndex] {
-        var filtered = allCoins
-        
-        if selectedCategory != .all {
-            filtered = filtered.filter { $0.categories.contains(selectedCategory) }
-        }
-        
-        if !searchText.isEmpty {
-            filtered = filtered.filter {
-                $0.name.lowercased().contains(searchText.lowercased()) ||
-                $0.symbol.lowercased().contains(searchText.lowercased())
-            }
-        }
-        
-        return filtered
-    }
-    
-    private func submitIndexToBackend() {
-        guard let url = URL(string: "http://localhost:3001/api/indexes") else { return }
-
-        let coinPayload = selectedCoins.map { ["symbol": $0.symbol, "allocation": $0.allocation] }
-
-        let payload: [String: Any] = [
-            "index_name": indexName,
-            "description": indexDescription,
-            "category": selectedCategory.rawValue,
-            "coins": coinPayload,
-            "creator": "demo_user" // Replace with actual user if needed
-        ]
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload, options: [])
-        } catch {
-            print("Encoding failed:", error)
-            return
-        }
-
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            if let error = error {
-                print("POST failed:", error)
-            } else {
-                print("Index created and submitted to backend.")
-            }
-        }.resume()
-    }
-}
-
-// MARK: - Progress Steps View
-struct ProgressStepsView: View {
-    let steps: [String]
-    @Binding var currentStep: Int
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(0..<steps.count, id: \.self) { index in
-                VStack(spacing: 8) {
-                    // Step indicator
-                    ZStack {
-                        Circle()
-                            .fill(currentStep >= index ? Color.accentColor : Color.gray.opacity(0.3))
-                            .frame(width: 24, height: 24)
-                        
-                        if currentStep > index {
-                            Image(systemName: "checkmark")
-                                .font(.caption)
-                                .foregroundColor(.white)
-                        } else {
-                            Text("\(index + 1)")
-                                .font(.caption)
-                                .foregroundColor(currentStep >= index ? .white : .gray)
-                        }
-                    }
-                    
-                    // Step name
-                    Text(steps[index])
-                        .font(.caption)
-                        .foregroundColor(currentStep >= index ? .primary : .secondary)
-                }
-                
-                // Connecting line
-                if index < steps.count - 1 {
-                    Rectangle()
-                        .fill(currentStep > index ? Color.accentColor : Color.gray.opacity(0.3))
-                        .frame(height: 2)
-                        .frame(maxWidth: .infinity)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Category Button
-struct CategoryButton: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(isSelected ? Color.accentColor : Color(UIColor.tertiarySystemBackground))
-                )
-                .foregroundColor(isSelected ? .white : .secondary)
-        }
-    }
-}
-
-// MARK: - Coin Selection Row
-struct CoinSelectionRow: View {
-    let coin: CoinIndex
-    let isSelected: Bool
-    let onSelect: () -> Void
-    
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 12) {
-                // Coin icon
+    private func tokenIcon(for symbol: String) -> some View {
+        Group {
+            switch symbol {
+            case "BTC":
                 ZStack {
                     Circle()
-                        .fill(Color(UIColor.tertiarySystemBackground))
-                        .frame(width: 40, height: 40)
-                    
-                    Text(String(coin.symbol.prefix(1)))
-                        .font(.headline)
-                        .foregroundColor(.accentColor)
+                        .fill(Color.orange)
+                        .frame(width: 24, height: 24)
+                    Text("₿")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
                 }
+            case "ETH":
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("Ξ")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "XRP":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.black)
+                        .frame(width: 24, height: 24)
+                    Text("X")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "USDT":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.green)
+                        .frame(width: 24, height: 24)
+                    Text("T")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "SOL":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.purple)
+                        .frame(width: 24, height: 24)
+                    Text("S")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "USDC":
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("$")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "TRX":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.red)
+                        .frame(width: 24, height: 24)
+                    Text("T")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "ADA":
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("A")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            default:
+                ZStack {
+                    Circle()
+                        .fill(Color.gray)
+                        .frame(width: 24, height: 24)
+                    Text("?")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+        }
+    }
+    
+    private func coinColor(for symbol: String) -> Color {
+        switch symbol {
+        case "BTC": return .orange
+        case "ETH": return .blue
+        case "XRP": return .black
+        case "USDT": return .green
+        case "SOL": return .purple
+        case "USDC": return .blue
+        case "TRX": return .red
+        case "ADA": return .blue
+        default: return .gray
+        }
+    }
+}
+
+// MARK: - Asset Selection Card
+struct AssetSelectionCard: View {
+    let coin: CoinIndex
+    let isSelected: Bool
+    let onToggle: () -> Void
+    
+    var body: some View {
+        Button(action: onToggle) {
+            HStack(spacing: 12) {
+                tokenIcon(for: coin.symbol)
+                    .frame(width: 24, height: 24)
                 
-                // Coin details
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(coin.symbol)
-                        .font(.headline)
-                    
                     Text(coin.name)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
+                    
+                    Text(coin.symbol)
+                        .font(.custom("Satoshi-Bold", size: 14))
+                        .foregroundColor(.gray)
                 }
                 
                 Spacer()
                 
-                // Price info
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("$\(coin.price, specifier: "%.2f")")
-                        .font(.headline)
+                    Text(coin.price)
+                        .font(.custom("Satoshi-Bold", size: 16))
+                        .foregroundColor(.white)
                     
-                    Text(coin.priceChange > 0 ? "+\(coin.priceChange, specifier: "%.1f")%" : "\(coin.priceChange, specifier: "%.1f")%")
-                        .font(.caption)
-                        .foregroundColor(coin.priceChange > 0 ? .green : .red)
-                }
-                
-                // Selection indicator
-                ZStack {
-                    Circle()
-                        .stroke(isSelected ? Color.accentColor : Color.gray.opacity(0.3), lineWidth: 2)
-                        .frame(width: 24, height: 24)
-                    
-                    if isSelected {
-                        Circle()
-                            .fill(Color.accentColor)
-                            .frame(width: 16, height: 16)
+                    HStack(spacing: 4) {
+                        Image(systemName: coin.change >= 0 ? "triangle.fill" : "triangle.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(coin.change >= 0 ? .green : .red)
+                            .rotationEffect(.degrees(coin.change >= 0 ? 0 : 180))
+                        
+                        Text("\(coin.change >= 0 ? "+" : "")\(String(format: "%.2f", coin.change))%")
+                            .font(.custom("Satoshi-Bold", size: 14))
+                            .foregroundColor(coin.change >= 0 ? .green : .red)
                     }
                 }
+                
+                Circle()
+                    .fill(isSelected ? Color.blue : Color.clear)
+                    .frame(width: 20, height: 20)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.white, lineWidth: 2)
+                    )
             }
-            .padding()
+            .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(UIColor.secondarySystemBackground))
+                    .fill(Color(hex: "141628"))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
                     )
             )
         }
-        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func tokenIcon(for symbol: String) -> some View {
+        Group {
+            switch symbol {
+            case "BTC":
+                ZStack {
+                    Circle()
+                        .fill(Color.orange)
+                        .frame(width: 24, height: 24)
+                    Text("₿")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "ETH":
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("Ξ")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "XRP":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.black)
+                        .frame(width: 24, height: 24)
+                    Text("X")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "USDT":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.green)
+                        .frame(width: 24, height: 24)
+                    Text("T")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "SOL":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.purple)
+                        .frame(width: 24, height: 24)
+                    Text("S")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "USDC":
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("$")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "TRX":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.red)
+                        .frame(width: 24, height: 24)
+                    Text("T")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "ADA":
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("A")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            default:
+                ZStack {
+                    Circle()
+                        .fill(Color.gray)
+                        .frame(width: 24, height: 24)
+                    Text("?")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+        }
+    }
+    
+    private func coinColor(for symbol: String) -> Color {
+        switch symbol {
+        case "BTC": return .orange
+        case "ETH": return .blue
+        case "XRP": return .black
+        case "USDT": return .green
+        case "SOL": return .purple
+        case "USDC": return .blue
+        case "TRX": return .red
+        case "ADA": return .blue
+        default: return .gray
+        }
     }
 }
 
-// MARK: - Selected Coin Tag
-struct SelectedCoinTag: View {
+// MARK: - Asset Allocation Card
+struct AssetAllocationCard: View {
     let coin: CoinIndex
+    let allocation: Double
+    let onAllocationChange: (Double) -> Void
     let onRemove: () -> Void
     
-    var body: some View {
-        HStack(spacing: 4) {
-            Text(coin.symbol)
-                .font(.subheadline)
-                .padding(.leading, 8)
-            
-            Button(action: onRemove) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.trailing, 4)
-        }
-        .padding(.vertical, 6)
-        .background(
-            Capsule()
-                .fill(Color(UIColor.tertiarySystemBackground))
-        )
-    }
-}
-
-// MARK: - Allocation Row
-struct AllocationRow: View {
-    @Binding var coin: CoinIndex
-    let onDelete: () -> Void
+    @State private var isHoldingMinus = false
+    @State private var isHoldingPlus = false
+    @State private var holdTimer: Timer?
     
     var body: some View {
         HStack(spacing: 12) {
-            // Coin icon
-            ZStack {
-                Circle()
-                    .fill(coin.color.opacity(0.2))
-                    .frame(width: 40, height: 40)
-                
-                Text(String(coin.symbol.prefix(1)))
-                    .font(.headline)
-                    .foregroundColor(coin.color)
-            }
+            tokenIcon(for: coin.symbol)
+                .frame(width: 24, height: 24)
             
-            // Coin details
             VStack(alignment: .leading, spacing: 2) {
-                Text(coin.symbol)
-                    .font(.headline)
-                
                 Text(coin.name)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(.custom("Satoshi-Bold", size: 16))
+                    .foregroundColor(.white)
+                
+                Text(coin.symbol)
+                    .font(.custom("Satoshi-Bold", size: 14))
+                    .foregroundColor(.gray)
             }
             
             Spacer()
             
-            // Allocation percentage
-            HStack {
+            HStack(spacing: 8) {
+                // Minus Button with hold functionality
                 Button(action: {
-                    if coin.allocation > 1 {
-                        coin.allocation -= 1
+                    if allocation > 0 {
+                        onAllocationChange(allocation - 1)
                     }
                 }) {
-                    Image(systemName: "minus.circle")
-                        .foregroundColor(.gray)
+                    Image(systemName: "minus")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 32, height: 32)
+                        .background(
+                            Circle()
+                                .fill(isHoldingMinus ? Color.red.opacity(0.6) : Color.gray.opacity(0.3))
+                        )
+                        .scaleEffect(isHoldingMinus ? 1.1 : 1.0)
+                        .animation(.easeInOut(duration: 0.1), value: isHoldingMinus)
                 }
+                .onLongPressGesture(minimumDuration: 0.3, maximumDistance: 50) {
+                    // Long press started
+                    startHoldingMinus()
+                } onPressingChanged: { pressing in
+                    if !pressing {
+                        // Long press ended
+                        stopHolding()
+                    }
+                }
+                .disabled(allocation <= 0)
+                .opacity(allocation <= 0 ? 0.5 : 1.0)
                 
-                Text("\(Int(coin.allocation))%")
-                    .font(.headline)
-                    .frame(minWidth: 40)
+                // Percentage display with more space
+                Text("\(Int(allocation))%")
+                    .font(.custom("Satoshi-Bold", size: 16))
+                    .foregroundColor(.white)
+                    .frame(minWidth: 50, maxWidth: 60)
+                    .multilineTextAlignment(.center)
+                    .animation(.easeInOut(duration: 0.2), value: allocation)
                 
+                // Plus Button with hold functionality
                 Button(action: {
-                    if coin.allocation < 100 {
-                        coin.allocation += 1
+                    if allocation < 100 {
+                        onAllocationChange(allocation + 1)
                     }
                 }) {
-                    Image(systemName: "plus.circle")
-                        .foregroundColor(.gray)
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 32, height: 32)
+                        .background(
+                            Circle()
+                                .fill(isHoldingPlus ? Color.green.opacity(0.6) : Color.gray.opacity(0.3))
+                        )
+                        .scaleEffect(isHoldingPlus ? 1.1 : 1.0)
+                        .animation(.easeInOut(duration: 0.1), value: isHoldingPlus)
                 }
-            }
-            
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .foregroundColor(.red.opacity(0.7))
+                .onLongPressGesture(minimumDuration: 0.3, maximumDistance: 50) {
+                    // Long press started
+                    startHoldingPlus()
+                } onPressingChanged: { pressing in
+                    if !pressing {
+                        // Long press ended
+                        stopHolding()
+                    }
+                }
+                .disabled(allocation >= 100)
+                .opacity(allocation >= 100 ? 0.5 : 1.0)
+                
+                // Spacer to push trash button to the right
+                Spacer()
+                    .frame(width: 8)
+                
+                Button(action: onRemove) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.red)
+                        .frame(width: 32, height: 32)
+                        .background(Color.red.opacity(0.2))
+                        .clipShape(Circle())
+                }
             }
         }
-        .padding()
+        .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(UIColor.secondarySystemBackground))
+                .fill(Color(hex: "1A1C2E"))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
         )
+        .onDisappear {
+            stopHolding()
+        }
     }
-}
-
-// MARK: - Allocation Summary Card
-struct AllocationSummaryCard: View {
-    let allocatedPercentage: Double
-    let averageAllocation: Double
     
-    var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Total Allocated")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    Text("\(Int(allocatedPercentage))%")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(allocatedPercentage == 100 ? .green : .primary)
+    // MARK: - Hold Functionality
+    
+    private func startHoldingMinus() {
+        isHoldingMinus = true
+        isHoldingPlus = false
+        
+        // Haptic feedback when starting to hold
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+        
+        startHoldTimer {
+            if self.allocation > 0 {
+                self.onAllocationChange(self.allocation - 1)
+            } else {
+                self.stopHolding()
+            }
+        }
+    }
+    
+    private func startHoldingPlus() {
+        isHoldingPlus = true
+        isHoldingMinus = false
+        
+        // Haptic feedback when starting to hold
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+        
+        startHoldTimer {
+            if self.allocation < 100 {
+                self.onAllocationChange(self.allocation + 1)
+            } else {
+                self.stopHolding()
+            }
+        }
+    }
+    
+    private func startHoldTimer(action: @escaping () -> Void) {
+        // Initial delay before starting rapid increments
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            guard self.isHoldingMinus || self.isHoldingPlus else { return }
+            
+            // Start rapid increments
+            self.holdTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+                guard self.isHoldingMinus || self.isHoldingPlus else {
+                    self.stopHolding()
+                    return
                 }
-                
-                Spacer()
-                
+                action()
+            }
+        }
+    }
+    
+    private func stopHolding() {
+        isHoldingMinus = false
+        isHoldingPlus = false
+        holdTimer?.invalidate()
+        holdTimer = nil
+    }
+    
+    private func tokenIcon(for symbol: String) -> some View {
+        Group {
+            switch symbol {
+            case "BTC":
                 ZStack {
                     Circle()
-                        .stroke(lineWidth: 8)
-                        .opacity(0.3)
-                        .foregroundColor(.secondary)
-                        .frame(width: 60, height: 60)
-                    
+                        .fill(Color.orange)
+                        .frame(width: 24, height: 24)
+                    Text("₿")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "ETH":
+                ZStack {
                     Circle()
-                        .trim(from: 0.0, to: min(CGFloat(allocatedPercentage) / 100, 1.0))
-                        .stroke(style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
-                        .foregroundColor(allocatedPercentage == 100 ? .green : .accentColor)
-                        .rotationEffect(Angle(degrees: 270.0))
-                        .frame(width: 60, height: 60)
-                    
-                    Text("\(Int(allocatedPercentage))%")
-                        .font(.footnote)
-                        .bold()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("Ξ")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
                 }
-            }
-            
-            if allocatedPercentage != 100 {
-                Text(allocatedPercentage > 100 ? "Please reduce allocations to equal 100%" : "Please increase allocations to reach 100%")
-                    .font(.footnote)
-                    .foregroundColor(allocatedPercentage > 100 ? .red : .yellow)
+            case "XRP":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.black)
+                        .frame(width: 24, height: 24)
+                    Text("X")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "USDT":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.green)
+                        .frame(width: 24, height: 24)
+                    Text("T")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "SOL":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.purple)
+                        .frame(width: 24, height: 24)
+                    Text("S")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "USDC":
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("$")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "TRX":
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.red)
+                        .frame(width: 24, height: 24)
+                    Text("T")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            case "ADA":
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 24, height: 24)
+                    Text("A")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            default:
+                ZStack {
+                    Circle()
+                        .fill(Color.gray)
+                        .frame(width: 24, height: 24)
+                    Text("?")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(UIColor.secondarySystemBackground))
-        )
     }
-}
-
-// MARK: - Index Preview Card
-struct IndexPreviewCard: View {
-    let name: String
-    let description: String
-    let category: IndexCategory
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(name)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                    
-                    Text(category.rawValue)
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.accentColor.opacity(0.2))
-                        .cornerRadius(8)
-                }
-                
-                Spacer()
-                
-                // Creator badge
-                HStack(spacing: 4) {
-                    Image(systemName: "person.crop.circle.fill")
-                    Text("You")
-                        .font(.caption)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color(UIColor.tertiarySystemBackground))
-                .cornerRadius(8)
-            }
-            
-            if !description.isEmpty {
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
+    private func coinColor(for symbol: String) -> Color {
+        switch symbol {
+        case "BTC": return .orange
+        case "ETH": return .blue
+        case "XRP": return .black
+        case "USDT": return .green
+        case "SOL": return .purple
+        case "USDC": return .blue
+        case "TRX": return .red
+        case "ADA": return .blue
+        default: return .gray
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(UIColor.secondarySystemBackground))
-        )
-    }
-}
-
-// MARK: - Composition Pie Chart
-struct CompositionPieChart: View {
-    let coins: [CoinIndex]
-    
-    var body: some View {
-        ZStack {
-            // This is a placeholder for an actual pie chart implementation
-            // In a real implementation, you'd use SwiftUI's Path or a charting library
-            ForEach(0..<coins.count, id: \.self) { index in
-                let startAngle = self.startAngle(for: index)
-                let endAngle = self.endAngle(for: index)
-                
-                Path { path in
-                    path.move(to: CGPoint(x: 100, y: 100))
-                    path.addArc(
-                        center: CGPoint(x: 100, y: 100),
-                        radius: 80,
-                        startAngle: Angle(degrees: startAngle),
-                        endAngle: Angle(degrees: endAngle),
-                        clockwise: false
-                    )
-                }
-                .fill(coins[index].color)
-            }
-            
-            Circle()
-                .fill(Color.black)
-                .frame(width: 50, height: 50)
-            
-            Text("\(coins.count)")
-                .font(.headline)
-                .foregroundColor(.white)
-        }
-        .frame(width: 200, height: 200)
-        .frame(maxWidth: .infinity)
-    }
-    
-    // Helper functions to calculate pie chart angles
-    private func startAngle(for index: Int) -> Double {
-        let priorSegments = coins[0..<index].map { $0.allocation }.reduce(0, +)
-        return priorSegments / 100 * 360
-    }
-    
-    private func endAngle(for index: Int) -> Double {
-        let priorSegments = coins[0...index].map { $0.allocation }.reduce(0, +)
-        return priorSegments / 100 * 360
     }
 }
 
@@ -858,210 +1206,50 @@ struct MetricCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(.custom("Satoshi-Bold", size: 14))
+                .foregroundColor(.gray)
             
             Text(value)
-                .font(.headline)
+                .font(.custom("Satoshi-Bold", size: 20))
+                .foregroundColor(.white)
         }
-        .padding()
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(UIColor.secondarySystemBackground))
+                .fill(Color(hex: "141628"))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
         )
     }
 }
 
-// MARK: - Success View
-struct IndexCreatedView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var selectedTab: IndexSourceTab
-    @Binding var isPresented: Bool
-    @ObservedObject var leaderboardVM: LeaderboardViewModel
-    let indexName: String
-    let coins: [CoinIndex]
-    
-    var body: some View {
-        VStack(spacing: 24) {
-            // Success animation placeholder
-            ZStack {
-                Circle()
-                    .fill(Color.green.opacity(0.1))
-                    .frame(width: 120, height: 120)
-                
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundColor(.green)
-            }
-            .padding(.top, 60)
-            
-            Text("Index Created Successfully!")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("Your custom index \"\(indexName)\" is now live and visible to the community.")
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 32)
-            
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Index Composition")
-                    .font(.headline)
-                
-                ForEach(coins.prefix(3)) { coin in
-                    HStack {
-                        Text(coin.symbol)
-                            .fontWeight(.medium)
-                        
-                        Spacer()
-                        
-                        Text("\(Int(coin.allocation))%")
-                    }
-                }
-                
-                if coins.count > 3 {
-                    Text("+ \(coins.count - 3) more assets")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(UIColor.secondarySystemBackground))
-            )
-            .padding(.horizontal, 32)
-            
-            Text("Earn MANEKI tokens when others invest in your index!")
-                .font(.caption)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.green.opacity(0.1))
-                )
-            
-            Button(action: {
-                dismiss()
-            }) {
-                Text("View My Index")
-                    .font(.headline)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.accentColor)
-                    )
-                    .foregroundColor(.white)
-            }
-            .padding(.horizontal, 32)
-            .padding(.top, 16)
-            
-            Button(action: {
-                leaderboardVM.fetchLeaderboard()
-                selectedTab = .community
-                isPresented = false
-            }) {
-                Text("Back to Indexes")
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-        }
-        .padding(.bottom, 32)
-        .onAppear {
-            submitIndexToBackend()
-        }
-    }
-    
-    private func submitIndexToBackend() {
-        print("🟡 Submitting index to backend...")
-
-        guard let url = URL(string: "http://localhost:3001/api/indexes") else { return }
-
-        let coinPayload = coins.map { ["symbol": $0.symbol, "allocation": $0.allocation] }
-
-        let payload: [String: Any] = [
-            "index_name": indexName,
-            "description": "",
-            "category": "AI",
-            "coins": coinPayload,
-            "creator": "demo_user"
-        ]
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload, options: [])
-        } catch {
-            print("Encoding failed:", error)
-            return
-        }
-
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            print("✅ Submission complete")
-            if let data = data {
-                print("📄 Response: \(String(decoding: data, as: UTF8.self))")
-            }
-            if let error = error {
-                print("❌ Submission error: \(error)")
-            }
-        }.resume()
-    }
-
+// MARK: - Data Models
+struct CoinIndex: Identifiable, Hashable {
+    let id = UUID()
+    let name: String
+    let symbol: String
+    let price: String
+    let change: Double
 }
 
-// MARK: - Model Types
 enum IndexCategory: String, CaseIterable {
     case all = "All"
     case defi = "DeFi"
     case meme = "Meme Coins"
     case gaming = "Gaming"
-    case ai = "AI"
-    case infrastructure = "Infrastructure"
-    case layer2 = "Layer 2"
-    case metaverse = "Metaverse"
-    case web3 = "Web3"
-    case fintech = "FinTech"
 }
 
-struct CoinIndex: Identifiable {
-    let id = UUID()
-    let name: String
-    let symbol: String
-    let price: Double
-    let priceChange: Double
-    let categories: [IndexCategory]
-    var allocation: Double = 0
-    var color: Color {
-        // Generate predictable colors based on symbol
-        let colors: [Color] = [.blue, .purple, .green, .orange, .red, .pink, .teal, .yellow, .indigo]
-        let index = abs(symbol.hashValue) % colors.count
-        return colors[index]
-    }
-}
-
-let allCoins: [CoinIndex] = [
-    CoinIndex(name: "Bitcoin", symbol: "BTC", price: 57824.58, priceChange: 2.3, categories: [.infrastructure]),
-    CoinIndex(name: "Ethereum", symbol: "ETH", price: 3142.87, priceChange: 1.5, categories: [.infrastructure, .defi]),
-    CoinIndex(name: "Solana", symbol: "SOL", price: 142.73, priceChange: 3.8, categories: [.infrastructure, .gaming]),
-    CoinIndex(name: "Cardano", symbol: "ADA", price: 0.62, priceChange: -0.4, categories: [.infrastructure]),
-    CoinIndex(name: "Dogecoin", symbol: "DOGE", price: 0.21, priceChange: 6.2, categories: [.meme]),
-    CoinIndex(name: "Shiba Inu", symbol: "SHIB", price: 0.000027, priceChange: 5.7, categories: [.meme]),
-    CoinIndex(name: "Chainlink", symbol: "LINK", price: 19.45, priceChange: 4.2, categories: [.defi, .infrastructure]),
-    CoinIndex(name: "Aave", symbol: "AAVE", price: 128.17, priceChange: -1.2, categories: [.defi]),
-    CoinIndex(name: "Uniswap", symbol: "UNI", price: 11.38, priceChange: 2.0, categories: [.defi]),
-    CoinIndex(name: "Render", symbol: "RNDR", price: 9.52, priceChange: 7.9, categories: [.ai]),
-    CoinIndex(name: "Fetch.ai", symbol: "FET", price: 2.12, priceChange: 6.3, categories: [.ai]),
-    CoinIndex(name: "The Graph", symbol: "GRT", price: 0.31, priceChange: 3.2, categories: [.web3]),
-    CoinIndex(name: "Sandbox", symbol: "SAND", price: 0.72, priceChange: -0.9, categories: [.metaverse]),
-    CoinIndex(name: "Decentraland", symbol: "MANA", price: 0.61, priceChange: -1.5, categories: [.metaverse]),
-    CoinIndex(name: "Polygon", symbol: "MATIC", price: 1.12, priceChange: 1.8, categories: [.layer2, .defi]),
-    CoinIndex(name: "Optimism", symbol: "OP", price: 3.46, priceChange: 4.1, categories: [.layer2]),
-    CoinIndex(name: "Arbitrum", symbol: "ARB", price: 2.17, priceChange: 2.5, categories: [.layer2]),
-    CoinIndex(name: "Worldcoin", symbol: "WLD", price: 5.92, priceChange: -3.4, categories: [.web3]),
-    CoinIndex(name: "SUI", symbol: "SUI", price: 1.48, priceChange: 2.6, categories: [.infrastructure]),
-    CoinIndex(name: "Ripple", symbol: "XRP", price: 0.73, priceChange: -0.2, categories: [.fintech])
+// MARK: - Mock Data
+let mockCoins: [CoinIndex] = [
+    CoinIndex(name: "Bitcoin", symbol: "BTC", price: "$117 176,16", change: -1.12),
+    CoinIndex(name: "XRP", symbol: "XRP", price: "$1.00", change: 0.01),
+    CoinIndex(name: "Ethereum", symbol: "ETH", price: "$14 153,00", change: -1.12),
+    CoinIndex(name: "Tether", symbol: "USDT", price: "$12.23", change: 1.12),
+    CoinIndex(name: "Solana", symbol: "SOL", price: "$12.23", change: 1.12),
+    CoinIndex(name: "USDC", symbol: "USDC", price: "$14 153,00", change: -1.12),
+    CoinIndex(name: "TRON", symbol: "TRX", price: "$1.00", change: 0.01),
+    CoinIndex(name: "Cardano", symbol: "ADA", price: "$117 176,16", change: -1.12)
 ]

@@ -29,36 +29,25 @@ struct PINEntryView: View {
             VStack {
                 // Status bar area
                 
-                Spacer().frame(height: 60)
+                Spacer().frame(height: 80)
                 
                 // Profile section
                 VStack(spacing: 20) {
                     // Profile picture
-                    if let userProfile = authManager.userProfile, let image = userProfile.profilePic {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 100, height: 100)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                        // Greeting text
-                        Text("Good evening,\n" + userProfile.username)
-                            .font(.system(size: 28, weight: .medium))
-                            .foregroundColor(.white)
-                    } else {
-//                        Image("Profile")
-//                            .resizable()
-//                            .aspectRatio(contentMode: .fill)
-//                            .frame(width: 100, height: 100)
-//                            .clipShape(RoundedRectangle(cornerRadius: 12))
-//                            .overlay(
-//                                RoundedRectangle(cornerRadius: 12)
-//                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-//                            )
-                    }
+                    Image("Profile")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 100, height: 100)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                    
+                    // Greeting text
+                    Text("Good evening, James")
+                        .font(.custom("Satoshi-Black", size: 28))
+                        .foregroundColor(.white)
                 }
                 .modifier(ShakeEffect(animatableData: viewModel.pinError ? 1 : 0))
                 .frame(height: 190)
@@ -66,7 +55,7 @@ struct PINEntryView: View {
                 Spacer().frame(height: 50)
                 
                 // PIN Dots
-                HStack(spacing: 16) {
+                HStack(spacing: 24) {
                     ForEach(0..<6, id: \.self) { index in
                         PINEntryDot(
                             isFilled: index < viewModel.pin.count,
@@ -75,33 +64,33 @@ struct PINEntryView: View {
                     }
                 }
                 
-                Spacer().frame(height: 50)
+                Spacer().frame(height: 60)
                 
                 // Number pad
-                VStack(spacing: 12) {
+                VStack(spacing: 18) {
                     // Row 1: 1, 2, 3
-                    HStack(spacing: 16) {
+                    HStack(spacing: 20) {
                         NumberPadButton(number: "1") { viewModel.appendPin(digit: "1") }
                         NumberPadButton(number: "2") { viewModel.appendPin(digit: "2") }
                         NumberPadButton(number: "3") { viewModel.appendPin(digit: "3") }
                     }
                     
                     // Row 2: 4, 5, 6
-                    HStack(spacing: 16) {
+                    HStack(spacing: 20) {
                         NumberPadButton(number: "4") { viewModel.appendPin(digit: "4") }
                         NumberPadButton(number: "5") { viewModel.appendPin(digit: "5") }
                         NumberPadButton(number: "6") { viewModel.appendPin(digit: "6") }
                     }
                     
                     // Row 3: 7, 8, 9
-                    HStack(spacing: 16) {
+                    HStack(spacing: 20) {
                         NumberPadButton(number: "7") { viewModel.appendPin(digit: "7") }
                         NumberPadButton(number: "8") { viewModel.appendPin(digit: "8") }
                         NumberPadButton(number: "9") { viewModel.appendPin(digit: "9") }
                     }
                     
                     // Row 4: Face ID, 0, Delete
-                    HStack(spacing: 16) {
+                    HStack(spacing: 20) {
                         // Face ID button
                         Button(action: { runBiometricAuthentication() }) {
                             ZStack {
@@ -138,13 +127,15 @@ struct PINEntryView: View {
                 .padding(.bottom, 10)
                 
                 // Forgot passcode link
-                Button("Forgot your passcode?") {
+                Button(action: {
                     // TODO: Implement Firebase forgot password functionality
                     // This should integrate with Firebase Auth to send password reset email
                     // Handle forgot passcode
+                }) {
+                    Text("Forgot your passcode?")
+                        .font(.custom("Satoshi-Black", size: 18))
+                        .foregroundColor(.white)
                 }
-                .font(.system(size: 16, weight: .regular))
-                .foregroundColor(.white)
                 .padding(.bottom, 40)
             }
         }
@@ -185,8 +176,12 @@ struct PINEntryDot: View {
     
     var body: some View {
         Circle()
-            .fill(isFilled ? Color.white : Color(red: 0.29, green: 0.29, blue: 0.29)) // #4A4A4A
-            .frame(width: 12, height: 12)
+            .fill(isFilled ? Color.white : Color(red: 0.35, green: 0.35, blue: 0.35)) // Darker gray for more contrast
+            .frame(width: 16, height: 16)
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
             .scaleEffect(isFilled ? 1.0 : 1.0)
             .animation(.spring(response: 0.2), value: isFilled)
             .modifier(ShakeEffect(animatableData: error ? 1 : 0))
@@ -200,15 +195,20 @@ struct NumberPadButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(red: 0.08, green: 0.09, blue: 0.16)) // #141628
-                    .frame(width: 100, height: 60)
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(red: 0.12, green: 0.13, blue: 0.20)) // Darker, more substantial
+                    .frame(width: 110, height: 75)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
                 
                 Text(number)
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.custom("Satoshi-Black", size: 36))
                     .foregroundColor(.white)
             }
         }
         .buttonStyle(ScaleButtonStyle())
     }
 }
+

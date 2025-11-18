@@ -176,7 +176,7 @@ struct ManekiChatBubble: View {
             if message.isFromUser { Spacer() }
             Text(message.content)
                 .padding()
-                .background(message.isFromUser ? Color.blue : Color.gray.opacity(0.3))
+                .background(message.isFromUser ? Color(hex: "282A45") : Color(hex: "141628"))
                 .foregroundColor(.white)
                 .cornerRadius(18)
                 .frame(maxWidth: 280, alignment: message.isFromUser ? .trailing : .leading)

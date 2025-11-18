@@ -28,10 +28,10 @@ enum Chain: String, CaseIterable {
     
     var iconName: String {
         switch self {
-        case .sol: return "icon_solana"
-        case .eth: return "icon_ethereum"
-        case .base: return "icon_base"
-        case .bsc: return "icon_bnb"
+        case .sol: return "SOLVector"
+        case .eth: return "ETHVector"
+        case .base: return "BaseVector"
+        case .bsc: return "BNBVector"
         }
     }
     
@@ -85,9 +85,22 @@ struct Token: Identifiable {
     
     var priceFormatted: String {
         if price < 0.000001 {
-            return String(format: "$%.10f", price)
-        } else if price < 0.01 {
+            // Convert to micro (μ) - multiply by 1,000,000
+            let microValue = price * 1_000_000
+            return String(format: "$%.2fμ", microValue)
+        } else if price < 0.00001 {
+            // Convert to micro (μ) - multiply by 1,000,000
+            let microValue = price * 1_000_000
+            return String(format: "$%.1fμ", microValue)
+        } else if price < 0.0001 {
+            // Convert to micro (μ) - multiply by 1,000,000
+            let microValue = price * 1_000_000
+            return String(format: "$%.0fμ", microValue)
+        } else if price < 0.001 {
+            // Show as regular decimal with more precision
             return String(format: "$%.6f", price)
+        } else if price < 0.01 {
+            return String(format: "$%.5f", price)
         } else if price < 1 {
             return String(format: "$%.4f", price)
         } else {

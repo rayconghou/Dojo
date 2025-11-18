@@ -8,6 +8,30 @@
 import SwiftUI
 import Combine
 import FirebaseAuth
+// import AWSSQS // Temporarily disabled
+
+// MARK: - Font Utilities
+extension Font {
+    static func satoshiBlack(size: CGFloat) -> Font {
+        return .custom("Satoshi-Black", size: size)
+    }
+    
+    static func satoshiBold(size: CGFloat) -> Font {
+        return .custom("Satoshi-Bold", size: size)
+    }
+    
+    static func satoshiMedium(size: CGFloat) -> Font {
+        return .custom("Satoshi-Medium", size: size)
+    }
+    
+    static func satoshiRegular(size: CGFloat) -> Font {
+        return .custom("Satoshi-Regular", size: size)
+    }
+    
+    static func lastShuriken(size: CGFloat) -> Font {
+        return .custom("The Last Shuriken", size: size)
+    }
+}
 
 // MARK: - Main ContentView with Splash Screen
 
@@ -88,11 +112,6 @@ struct ContentView: View {
         .onAppear {
             showDojo = true
             
-            // TEMP
-            // Debug authentication state
-            print("Auth state on appear - isLoggedIn: \(authManager.isLoggedIn)")
-            print("User profile: \(AuthManager.shared.userProfile?.email ?? "nil")")
-            
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 showLogo = true
             }
@@ -101,20 +120,18 @@ struct ContentView: View {
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 withAnimation { hideSplash = true }
-                print("Splash hidden - Auth state: \(authManager.isLoggedIn)")
-                print("User profile after splash: \(AuthManager.shared.userProfile?.email ?? "nil")")
                 
                 // MOCK: Create user profile for frontend development
-//                if authManager.isLoggedIn && AuthManager.shared.userProfile == nil {
-//                    AuthManager.shared.userProfile = UserProfileViewModel(
-//                        email: Auth.auth().currentUser?.email ?? "demo@example.com",
-//                        username: "Demo User"
-//                    )
-//                    print("Created mock user profile for frontend development")
-//                }
+                if authViewModel.isLoggedIn && AuthManager.shared.userProfile == nil {
+                    AuthManager.shared.userProfile = UserProfileViewModel(
+                        email: Auth.auth().currentUser?.email ?? "demo@example.com",
+                        username: "Demo User"
+                    )
+                }
             }
         }
     }
+    
     
     var splashScreen: some View {
         ZStack {
@@ -134,6 +151,7 @@ struct ContentView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 250, height: 250)
+                
             }
             .padding(.vertical, 50)
         }
